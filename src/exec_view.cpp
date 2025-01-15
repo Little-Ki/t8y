@@ -12,7 +12,10 @@ namespace t8y {
         auto steps = m_timer.steps();
         if (m_vm.isFn("update") && steps < 3) {
             for (auto i = 0; i < steps; i++) {
-                m_vm.call("update");
+                if (!m_vm.call("update")) {
+                    app->signal.join(SIGNAL_EXCEPTION, m_vm.err());
+                    return;
+                };
             }
         }
         m_timer.consume(steps);
@@ -20,7 +23,10 @@ namespace t8y {
 
     void ExecutionView::draw() {
         if (m_vm.isFn("draw")) {
-            m_vm.call("draw");
+            if (!m_vm.call("draw")) {
+                app->signal.join(SIGNAL_EXCEPTION, m_vm.err());
+                return;
+            };
         }
     }
 
@@ -32,7 +38,10 @@ namespace t8y {
         }
 
         if (m_vm.isFn("init")) {
-            m_vm.call("init");
+            if (!m_vm.call("init")) {
+                app->signal.join(SIGNAL_EXCEPTION, m_vm.err());
+                return;
+            };
         }
 
         app->graphic.clear(0);
