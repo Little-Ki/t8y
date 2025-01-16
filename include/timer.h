@@ -6,6 +6,8 @@ namespace t8y {
     public:
         int ticks();
 
+        int steps();
+
         void consume(int ticks);
 
         void reset();
