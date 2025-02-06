@@ -5,6 +5,8 @@
 #include "buffer.h"
 #include "utils.h"
 
+#include "app.h"
+
 namespace t8y {
 
     void Graphic::clear(uint8_t c) {

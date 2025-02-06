@@ -5,7 +5,7 @@ namespace t8y {
         const auto now = std::chrono::system_clock::now();
         const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_started);
         const auto ms = duration.count();
-        const auto ticks = static_cast<int>(ms / 15.625f);
+        const auto ticks = static_cast<int>(ms * 0.064f);
 
         return ticks;
     }

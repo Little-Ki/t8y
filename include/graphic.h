@@ -3,9 +3,10 @@
 #include <optional>
 #include <tuple>
 
-#include "app_context.h"
-
 namespace t8y {
+    
+    struct AppContext;
+
     class Graphic {
     public:
         Graphic(AppContext* ctx);

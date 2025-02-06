@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include "app.h"
+
 namespace t8y {
 
     void MouseInput::flush() {

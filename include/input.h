@@ -2,10 +2,11 @@
 
 #include <memory>
 #include <queue>
-
-#include "app_context.h"
+#include <string>
 
 namespace t8y {
+
+    struct AppContext;
 
     class MouseInput {
     public:
