@@ -3,6 +3,14 @@
 
 namespace t8 {
 
+    struct GraphicState {
+        uint8_t prev_palette[0x8];
+    };
+
+    void graphic_backup_palette();
+
+    void graphic_restore_palette();
+
     void graphic_reset();
 
     void graphic_clip(int x = 0, int y = 0, int w = 128, int h = 128);
@@ -15,6 +23,8 @@ namespace t8 {
 
     void graphic_opacity(uint16_t t = 1);
 
+    void graphic_reset_palette();
+    
     void graphic_palette(uint8_t n, uint8_t map);
 
     uint8_t graphic_palette(uint8_t n);

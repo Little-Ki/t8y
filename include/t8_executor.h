@@ -1,6 +1,14 @@
 #pragma once
 
+#include "t8_timer.h"
+
 namespace t8 {
+
+    struct ExecutorState {
+        Timer timer;
+        uint8_t select;
+        bool paused{false};
+    };
 
     void executor_update();
 

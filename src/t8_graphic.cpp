@@ -6,13 +6,20 @@
 #include <algorithm>
 
 namespace t8 {
+    GraphicState state;
 
     void graphic_reset() {
-        for (auto i = 0; i < 16; i++) {
-            graphic_palette(i, i);
-        }
+        graphic_reset_palette();
         graphic_clip();
         graphic_camera();
+    }
+
+    void graphic_backup_palette() {
+        std::copy(mem()->palette, mem()->palette + 0x8, state.prev_palette);
+    }
+
+    void graphic_restore_palette() {
+        std::copy(state.prev_palette, state.prev_palette + 0x8, mem()->palette);
     }
 
     void graphic_clip(int x, int y, int w, int h) {
@@ -52,6 +59,12 @@ namespace t8 {
 
     void graphic_opacity(uint16_t t) {
         mem()->opacity = t;
+    }
+
+    void graphic_reset_palette() {
+        for (auto i = 0; i < 16; i++) {
+            graphic_palette(i, i);
+        }
     }
 
     void graphic_palette(uint8_t n, uint8_t map) {
