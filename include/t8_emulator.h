@@ -1,4 +1,7 @@
 #pragma once
+#include <functional>
+#include <unordered_map>
+
 
 namespace t8 {
 
@@ -8,9 +11,17 @@ namespace t8 {
         Executor
     };
 
+    struct SceneProxy {
+        std::function<void()> update;
+        std::function<void()> render;
+        std::function<void()> enter;
+        std::function<void()> leave;
+    };
+
     struct EnumlatorState {
-        Scene scene;
         float pixel_size;
+        std::unordered_map<Scene, SceneProxy> scenes;
+        SceneProxy scene;
     };
 
     bool emulator_initialize();

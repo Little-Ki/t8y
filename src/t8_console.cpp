@@ -2,10 +2,19 @@
 
 namespace t8 {
 
-    void t8::console_update() {
+    void console_update() {
+        
     }
     
-    void t8::console_render() {
+    void console_render() {
+
     }
-    
+
+    void console_enter() {
+
+    }
+
+    void console_leave() {
+
+    }
 }

@@ -55,6 +55,31 @@ namespace t8 {
         stbi_image_free(data);
     }
 
+    void emulator_setup_scene() {
+        state.scenes[Scene::Console] = {
+            console_update,
+            console_render,
+            console_enter,
+            console_leave
+        };
+
+        state.scenes[Scene::Editor] = {
+            editor_update,
+            editor_render,
+            editor_enter,
+            editor_leave
+        };
+
+        state.scenes[Scene::Executor] = {
+            executor_update,
+            executor_render,
+            executor_enter,
+            executor_leave
+        };
+
+        state.scene = state.scenes[Scene::Console];
+    }
+
     bool emulator_initialize() {
         state.pixel_size = 4;
 
@@ -64,10 +89,9 @@ namespace t8 {
 
         graphic_reset();
 
+        emulator_setup_scene();
         emulator_setup_screen();
         emulator_setup_fonts();
-
-        state.scene = Scene::Console;
 
         return true;
     }
@@ -129,16 +153,8 @@ namespace t8 {
     }
 
     void emulator_handle_scene() {
-        if (state.scene == Scene::Console) {
-            console_update();
-            console_render();
-        }
-
-        if (state.scene == Scene::Editor) {
-        }
-
-        if (state.scene == Scene::Executor) {
-        }
+        state.scene.update();
+        state.scene.render();
     }
 
     void emulator_handle_signal() {
