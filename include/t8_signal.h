@@ -21,6 +21,6 @@ namespace t8 {
 
     const signal_t& signal_peek();
 
-    void signal_remove();
+    void signal_pop();
 
 }

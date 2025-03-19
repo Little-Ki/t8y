@@ -135,7 +135,7 @@ namespace t8 {
             for (auto dx = 0; dx < 8; dx++) {
                 bool c = graphic_font(baseX + dx, baseY + dy, custom);
                 if (c)
-                    graphic_font(x + dx, y + dy, color);
+                    graphic_pixel(x + dx, y + dy, color);
             }
         }
     }

@@ -4,6 +4,8 @@
 #include "t8_graphic.h"
 #include "t8_keybd.h"
 #include "t8_mouse.h"
+#include "t8_signal.h"
+#include "t8_sinput.h"
 #include "t8_vscreen.h"
 #include "t8_window.h"
 
@@ -55,30 +57,38 @@ namespace t8 {
         stbi_image_free(data);
     }
 
+    void emulator_swap_scene(Scene next) {
+        if (state.scene) {
+            state.scene->leave();
+        }
+        state.scene = &state.scenes[next];
+        if (state.scene) {
+            state.scene->enter();
+        }
+    }
+
     void emulator_setup_scene() {
         state.scenes[Scene::Console] = {
             console_update,
             console_render,
             console_enter,
-            console_leave
-        };
+            console_leave};
 
         state.scenes[Scene::Editor] = {
             editor_update,
             editor_render,
             editor_enter,
-            editor_leave
-        };
+            editor_leave};
 
         state.scenes[Scene::Executor] = {
             executor_update,
             executor_render,
             executor_enter,
-            executor_leave
-        };
+            executor_leave};
 
-        state.scene = state.scenes[Scene::Console];
+        emulator_swap_scene(Scene::Console);
     }
+
 
     bool emulator_initialize() {
         state.pixel_size = 4;
@@ -119,13 +129,33 @@ namespace t8 {
             const auto &i = event.wheel;
             mouse_wheel(static_cast<uint8_t>(i.y));
         }
-
     }
 
     void emulator_handle_keybd(const SDL_Event &event) {
+        if (event.type == SDL_EVENT_KEY_DOWN ||
+            event.type == SDL_EVENT_KEY_UP) {
+            const auto &i = event.key;
+            if (i.scancode > 255)
+                return;
+
+            keybd_button(i.scancode, i.mod, i.repeat, event.type == SDL_EVENT_KEY_DOWN);
+        }
     }
 
     void emulator_handle_gamepad(const SDL_Event &event) {
+        if (event.type == SDL_EVENT_GAMEPAD_ADDED) {
+            gamepad_join(event.gdevice.which);
+        }
+
+        if (event.type == SDL_EVENT_GAMEPAD_REMOVED) {
+            gamepad_remove(event.gdevice.which);
+        }
+
+        if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN ||
+            event.type == SDL_EVENT_GAMEPAD_BUTTON_UP) {
+            const auto &i = event.gbutton;
+            gamepad_button(i.which, i.button, event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN);
+        }
     }
 
     void emulator_handle_event(const SDL_Event &event) {
@@ -138,9 +168,12 @@ namespace t8 {
             break;
         }
         case SDL_EVENT_KEY_DOWN:
-        case SDL_EVENT_KEY_UP:
-        case SDL_EVENT_TEXT_INPUT: {
+        case SDL_EVENT_KEY_UP: {
             emulator_handle_keybd(event);
+            break;
+        }
+        case SDL_EVENT_TEXT_INPUT: {
+            sinput_push(event.text.text);
             break;
         }
         case SDL_EVENT_GAMEPAD_AXIS_MOTION:
@@ -153,11 +186,41 @@ namespace t8 {
     }
 
     void emulator_handle_scene() {
-        state.scene.update();
-        state.scene.render();
+        if (state.scene) {
+            state.scene->update();
+            state.scene->render();
+        }
     }
 
     void emulator_handle_signal() {
+
+        while (!signal_empty()) {
+            const auto s = signal_peek();
+            signal_pop();
+
+            if (s.first == Signal::StartInput) {
+                window_input(true);
+            }
+            if (s.first == Signal::StopInput) {
+                window_input(false);
+            }
+            if (s.first == Signal::SwapEditor) {
+                emulator_swap_scene(Scene::Editor);
+            }
+            if (s.first == Signal::SwapConsole) {
+                emulator_swap_scene(Scene::Console);
+            }
+            if (s.first == Signal::SwapExecutor) {
+                emulator_swap_scene(Scene::Executor);
+            }
+            if (s.first == Signal::Exception) {
+                console_print(std::any_cast<std::string>(s.second), true);
+                emulator_swap_scene(Scene::Console);
+            }
+            if (s.first == Signal::Print) {
+                console_print(std::any_cast<std::string>(s.second), false);
+            }
+        }
     }
 
     void emulator_run() {
@@ -167,6 +230,8 @@ namespace t8 {
         while (true) {
             window_event(event);
             mouse_flush();
+            keybd_flush();
+            gamepad_flush();
 
             switch (event.type) {
                 break;

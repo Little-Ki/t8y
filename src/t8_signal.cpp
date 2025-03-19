@@ -13,7 +13,7 @@ namespace t8 {
         queue.push(std::make_pair(type, value));
     }
 
-    void signal_remove() {
+    void signal_pop() {
         if (!queue.empty()) {
             queue.pop();
         }

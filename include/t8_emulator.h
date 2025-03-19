@@ -2,7 +2,6 @@
 #include <functional>
 #include <unordered_map>
 
-
 namespace t8 {
 
     enum class Scene {
@@ -21,11 +20,11 @@ namespace t8 {
     struct EnumlatorState {
         float pixel_size;
         std::unordered_map<Scene, SceneProxy> scenes;
-        SceneProxy scene;
+        SceneProxy *scene{nullptr};
     };
 
     bool emulator_initialize();
-    
+
     void emulator_run();
 
     void emulator_quit();
