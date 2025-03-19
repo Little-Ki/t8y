@@ -245,7 +245,7 @@ namespace t8 {
 
         for (auto i = 0ULL; i <= state.input.size(); i++) {
             if (state.cursor == i) {
-                const auto ticks = state.timer.ticks() >> 4;
+                const auto ticks = state.timer.ticks() >> 5;
 
                 if (ticks % 2) {
                     graphic_rect(x, y, 1, 7, 3);
