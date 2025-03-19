@@ -262,6 +262,7 @@ namespace t8 {
 
     void console_enter() {
         signal_send(Signal::StartInput);
+        graphic_reset();
 
         if (state.first_time) {
             state.first_time = false;
