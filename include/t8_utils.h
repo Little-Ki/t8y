@@ -9,9 +9,9 @@ namespace t8 {
     void str_rtrim(std::string &s);
 
     bool str_equals(const std::string &a, const std::string &b, bool ignore_case = false);
-    
+
     std::vector<std::string> str_explode(const std::string &text, char token);
-    
+
     constexpr bool is_big_endian() {
         union {
             uint32_t i;
@@ -40,5 +40,20 @@ namespace t8 {
     T max(T val, Args... args) {
         return std::max(val, max(args...));
     }
-    
+
+    template <typename T>
+    void byte_reverse(T &val) {
+        constexpr auto SIZE = sizeof(T);
+        auto buf = reinterpret_cast<char *>(&val);
+        for (auto i = 0; i < (SIZE >> 1); i++) {
+            std::swap(buf[i], buf[SIZE - i - 1]);
+        }
+    }
+
+    template <typename T, typename... Args>
+    void byte_reverse(T &val, Args &...args) {
+        byte_reverse(val);
+        byte_reverse(args...);
+    }
+
 }
