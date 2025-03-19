@@ -12,7 +12,7 @@ namespace t8 {
 
     struct SceneProxy {
         std::function<void()> update;
-        std::function<void()> render;
+        std::function<void()> draw;
         std::function<void()> enter;
         std::function<void()> leave;
     };

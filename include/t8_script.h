@@ -3,8 +3,8 @@
 
 namespace t8 {
 
-    void script_set(std::string& text);
+    void script_set(const std::string& text);
 
-    std::string& script_get();
+    const std::string& script_get();
 
 }

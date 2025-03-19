@@ -70,19 +70,19 @@ namespace t8 {
     void emulator_setup_scene() {
         state.scenes[Scene::Console] = {
             console_update,
-            console_render,
+            console_draw,
             console_enter,
             console_leave};
 
         state.scenes[Scene::Editor] = {
             editor_update,
-            editor_render,
+            editor_draw,
             editor_enter,
             editor_leave};
 
         state.scenes[Scene::Executor] = {
             executor_update,
-            executor_render,
+            executor_draw,
             executor_enter,
             executor_leave};
 
@@ -127,7 +127,7 @@ namespace t8 {
 
         if (event.type == SDL_EVENT_MOUSE_WHEEL) {
             const auto &i = event.wheel;
-            mouse_wheel(static_cast<uint8_t>(i.y));
+            mouse_wheel(static_cast<int8_t>(i.y));
         }
     }
 
@@ -188,7 +188,7 @@ namespace t8 {
     void emulator_handle_scene() {
         if (state.scene) {
             state.scene->update();
-            state.scene->render();
+            state.scene->draw();
         }
     }
 

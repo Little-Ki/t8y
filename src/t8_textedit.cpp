@@ -271,7 +271,7 @@ namespace t8 {
         sanitize(_state.cursor);
     }
 
-    void TextEdit::setState(const EditorState &state) {
+    void TextEdit::setState(const EditorSelection &state) {
         _state = state;
         sanitize(_state.ancher);
         sanitize(_state.cursor);

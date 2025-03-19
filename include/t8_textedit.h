@@ -87,7 +87,7 @@ namespace t8 {
         }
     };
 
-    struct EditorState {
+    struct EditorSelection {
         Coord ancher;
         Coord cursor;
     };
@@ -111,7 +111,7 @@ namespace t8 {
         Coord start;
         Coord end;
 
-        EditorState before;
+        EditorSelection before;
     };
 
     using EachLineFn = std::function<void(Line &, const int &)>;
@@ -169,12 +169,12 @@ namespace t8 {
 
         void setCursor(const Coord &cursor);
 
-        void setState(const EditorState &state);
+        void setState(const EditorSelection &state);
 
         void eachLine(int from, int to, EachLineFn fn);
 
     private:
-        EditorState _state;
+        EditorSelection _state;
         Lines m_lines;
 
         SizedStack<UndoRecord, 64> _undos;

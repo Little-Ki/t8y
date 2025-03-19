@@ -12,6 +12,7 @@ namespace t8 {
             graphic_palette(i, i);
         }
         graphic_clip();
+        graphic_camera();
     }
 
     void graphic_clip(int x, int y, int w, int h) {

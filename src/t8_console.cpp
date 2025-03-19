@@ -209,7 +209,7 @@ namespace t8 {
         }
     }
 
-    void console_render() {
+    void console_draw() {
         graphic_clear(0);
 
         auto linesHeight = console_measure_lines();
@@ -245,9 +245,7 @@ namespace t8 {
 
         for (auto i = 0ULL; i <= state.input.size(); i++) {
             if (state.cursor == i) {
-                const auto ticks = state.timer.ticks() >> 5;
-
-                if (ticks % 2) {
+                if ((state.timer.ticks() >> 5) % 2) {
                     graphic_rect(x, y, 1, 7, 3);
                 }
             }

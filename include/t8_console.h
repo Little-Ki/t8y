@@ -25,12 +25,12 @@ namespace t8 {
         std::string input;
         size_t cursor{0};
         ConsoleLines lines;
-        Timer timer;
+        Timer timer; 
     };
 
     void console_update();
 
-    void console_render();
+    void console_draw();
 
     void console_enter();
 
