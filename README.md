@@ -1,4 +1,4 @@
-# T8Y 幻想计算机 （未完工）
+# T8Y Fantastic Console
 
 ## 展览
 ![image](https://github.com/user-attachments/assets/af7e9d4f-d3d9-4cb3-bfc9-fdb54ff2e021)
