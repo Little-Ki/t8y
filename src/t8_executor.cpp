@@ -94,7 +94,7 @@ namespace t8 {
     }
 
     void executor_leave() {
-        vm_clear();
+        vm_release();
     }
 
 }

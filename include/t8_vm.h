@@ -8,6 +8,8 @@ extern "C" {
 #include <Lua/lua-5.4.7/include/lualib.h>
 }
 
+#include "t8_timer.h"
+
 namespace t8 {
 
     class VMCall {
@@ -131,11 +133,14 @@ namespace t8 {
     struct VMState {
         lua_State *vm{nullptr};
         std::string err_msg;
+        Timer timer;
     };
+
+    using vm_call_fn = int (*)(const VMCall &call);
 
     bool vm_initialize(const std::string &src);
 
-    void vm_clear();
+    void vm_release();
 
     const std::string &vm_error();
 
