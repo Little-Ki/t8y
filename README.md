@@ -24,7 +24,7 @@ function draw()
 end
 
 function update()
-    ... 每秒60次
+    ... 每秒64次
 end
 ```
 
