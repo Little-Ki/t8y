@@ -246,7 +246,7 @@ namespace t8 {
         }
 
         if (type == MoveType::NextLine) {
-            if (pos.line == m_lines.size())
+            if (pos.line == m_lines.size() - 1)
                 return;
             pos.column = std::min(pos.column, static_cast<int>(m_lines[pos.line + 1].size()));
             pos.line += 1;
