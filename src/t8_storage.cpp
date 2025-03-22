@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <numeric>
 
 namespace t8 {
     struct CardFileHeader {
@@ -118,7 +119,10 @@ namespace t8 {
             metas.push_back(meta);
         }
 
-        auto data_size = 0;
+        auto data_size = std::accumulate(
+            metas.begin(), metas.end(), 0, [](int a, const CartMeta &b) {
+                return a + b.size;
+            });
 
         for (const auto &i : metas) {
             data_size += i.size;
@@ -159,7 +163,7 @@ namespace t8 {
         return true;
     }
 
-    bool storage_save_cart(const std::string &name, std::string *err) {
+    bool storage_save_cart(const std::string &name) {
         CardFileHeader header;
         header.big_endian = is_big_endian();
         header.meta_count = 4;
@@ -186,9 +190,8 @@ namespace t8 {
         out.try_write(&meta);
         meta.type = MetaType::Script;
         meta.size = script_get().size();
-        out.try_write(&meta);
-
         
+        out.try_write(&meta);
         out.try_write(mem()->sprite, 0x2000);
         out.try_write(mem()->custom_font, 0x800);
         out.try_write(mem()->map, 0x4000);
