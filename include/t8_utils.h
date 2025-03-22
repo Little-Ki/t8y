@@ -43,10 +43,9 @@ namespace t8 {
 
     template <typename T>
     void byte_reverse(T &val) {
-        constexpr auto SIZE = sizeof(T);
         auto buf = reinterpret_cast<char *>(&val);
-        for (auto i = 0; i < (SIZE >> 1); i++) {
-            std::swap(buf[i], buf[SIZE - i - 1]);
+        for (auto i = 0; i < (sizeof(T) >> 1); i++) {
+            std::swap(buf[i], buf[sizeof(T) - i - 1]);
         }
     }
 
