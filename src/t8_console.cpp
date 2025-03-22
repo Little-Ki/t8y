@@ -3,6 +3,7 @@
 #include "t8_keybd.h"
 #include "t8_signal.h"
 #include "t8_sinput.h"
+#include "t8_storage.h"
 #include "t8_utils.h"
 
 #include <algorithm>
@@ -104,11 +105,15 @@ namespace t8 {
             return true;
         }
 
-        if (str_equals(payload[0], "load")) {
+        if (str_equals(payload[0], "load") && payload.size() > 1) {
+            if (!storage_load_cart(payload[1]))
+                console_join("Failed to load cart", false, 3);
             return true;
         }
 
         if (str_equals(payload[0], "save") && payload.size() > 1) {
+            if (!storage_save_cart(payload[1]))
+                console_join("Failed to save cart", false, 3);
             return true;
         }
 
