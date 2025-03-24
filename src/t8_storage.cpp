@@ -1,5 +1,6 @@
 #include "t8_storage.h"
 
+#include "t8_fstream.hpp"
 #include "t8_memory.h"
 #include "t8_script.h"
 #include "t8_utils.h"
@@ -9,154 +10,98 @@
 #include <numeric>
 
 namespace t8 {
-    struct CardFileHeader {
-        uint16_t signature;
-        uint8_t big_endian;
-        uint8_t meta_count;
+    struct CardHeader {
+        uint32_t signature;
+        uint32_t fh_count;
+        uint32_t fh_offset;
     };
 
-    enum class MetaType : uint8_t {
-        Unknown = 0,
-        Sprite = 1,
-        Map = 2,
-        Font = 3,
-        Script = 4
+    struct FileHeader {
+        uint32_t signature;
+        uint32_t name;
+        uint32_t size;
+        uint32_t offset;
     };
 
-    struct CartMeta {
-        MetaType type;
-        size_t size;
-    };
+    uint32_t find_ch(ifstream_t &in) {
+        size_t pos = in.size() - sizeof(CardHeader);
+        uint32_t signature = 0;
 
-    class FReader : public std::ifstream {
-    private:
-        size_t _file_size;
-        size_t _offset;
+        do {
+            in.seekg(pos, in.beg);
+            in.read(&signature);
+        } while (signature != 'cart' && pos-- > 0);
 
-    public:
-        bool try_open(const std::string &name) {
-            open(name, std::ios::binary | std::ios::in);
+        if (signature == 'cart')
+            return pos;
 
-            seekg(end);
-            _file_size = tellg();
-            seekg(beg);
+        return -1;
+    }
 
-            return good();
-        }
+    FileHeader read_fh(ifstream_t &in) {
+        FileHeader result;
+        in.read(&result.signature);
+        in.read(&result.size);
+        in.read(&result.offset);
+        return result;
+    }
 
-        template <typename T>
-        bool try_read(T *out, size_t size = sizeof(T)) {
-            if (_offset + size > _file_size)
-                return false;
-            read(reinterpret_cast<char *>(out), size);
-            return true;
-        }
-
-        const size_t &file_size() { return _file_size; }
-
-        ~FReader() {
-            if (good())
-                close();
-        }
-    };
-
-    class FWriter : public std::ofstream {
-    public:
-        bool try_open(const std::string &name) {
-            open(name, std::ios::binary | std::ios::out | std::ios::trunc);
-            return good();
-        }
-
-        template <typename T>
-        bool try_write(const T *data, size_t size = sizeof(T)) {
-            write(reinterpret_cast<const char *>(data), size);
-            return true;
-        }
-
-        ~FWriter() {
-            if (good())
-                close();
-        }
-    };
+    CardHeader read_ch(ifstream_t &in) {
+        CardHeader result;
+        in.read(&result.signature);
+        in.read(&result.fh_count);
+        in.read(&result.fh_offset);
+        return result;
+    }
 
     bool storage_load_cart(const std::string &name) {
-        FReader in;
+        ifstream_t in(is_big_endian());
+
         if (!in.try_open(name)) {
             return false;
         }
 
-        if (in.file_size() < sizeof(CardFileHeader)) {
+        auto ch_pos = find_ch(in);
+        
+        if (ch_pos == static_cast<size_t>(-1)) {
+            return false;
+        }
+        
+        in.seekg(ch_pos, in.beg);
+
+        auto ch = read_ch(in);
+
+        if (ch.signature != 'cart') {
             return false;
         }
 
-        CardFileHeader header;
+        std::vector<FileHeader> fhs;
+        auto count = ch.fh_count;
 
-        if (!in.try_read(&header)) {
-            return false;
-        };
+        in.seekg(ch.fh_offset, in.beg);
 
-        if (header.big_endian != is_big_endian()) {
-            byte_reverse(header.signature);
-        }
-
-        if (header.signature != 't8') {
-            return false;
-        }
-
-        std::vector<CartMeta> metas;
-
-        while (header.meta_count--) {
-            CartMeta meta;
-
-            if (!in.try_read(&meta)) {
+        while (count--) {
+            auto fh = read_fh(in);
+            if (fh.signature != 'ctfh') {
                 return false;
             }
-
-            if (header.big_endian != is_big_endian()) {
-                byte_reverse(meta.size);
-            }
-
-            metas.push_back(meta);
+            fhs.push_back(fh);
         }
 
-        auto data_size = std::accumulate(
-            metas.begin(), metas.end(), 0, [](int a, const CartMeta &b) {
-                return a + b.size;
-            });
+        for (const auto &f : fhs) {
+            in.seekg(f.offset, in.beg);
 
-        for (const auto &i : metas) {
-            data_size += i.size;
-        }
-
-        if (in.file_size() < sizeof(CardFileHeader) + sizeof(CartMeta) * header.meta_count + data_size) {
-            return false;
-        }
-
-        for (const auto &i : metas) {
-            if (i.type == MetaType::Sprite) {
-                if (!in.try_read(mem()->sprite, std::min(0x2000ULL, i.size))) {
-                    return false;
-                }
+            if (f.name == 'sprt') {
+                in.read(mem()->sprite, std::min(0x2000U, f.size));
             }
-
-            if (i.type == MetaType::Script) {
-                std::vector<char> buffer(i.size);
-                if (!in.try_read(buffer.data(), i.size)) {
-                    return false;
-                }
-                script_set(buffer.data());
+            if (f.name == 'map') {
+                in.read(mem()->map, std::min(0x4000U, f.size));
             }
-
-            if (i.type == MetaType::Map) {
-                if (!in.try_read(mem()->map, std::min(0x4000ULL, i.size))) {
-                    return false;
-                }
+            if (f.name == 'font') {
+                in.read(mem()->custom_font, std::min(0x800U, f.size));
             }
-
-            if (i.type == MetaType::Font) {
-                if (!in.try_read(mem()->custom_font, std::min(0x800ULL, i.size))) {
-                    return false;
-                }
+            if (f.name == 'scrp') {
+               script_set(in.read_str(f.size));
             }
         }
 
@@ -164,39 +109,48 @@ namespace t8 {
     }
 
     bool storage_save_cart(const std::string &name) {
-        CardFileHeader header;
-        header.big_endian = is_big_endian();
-        header.meta_count = 4;
-        header.signature = 't8';
-
-        FWriter out;
+        ofstream_t out(is_big_endian());
 
         if (!out.try_open(name)) {
             return false;
         }
 
-        out.try_write(&header);
+        out.write_buf(mem()->sprite, 0x2000);
+        out.write_buf(mem()->map, 0x4000);
+        out.write_buf(mem()->custom_font, 0x800);
+        out.write_buf(script_get().data(), script_get().size());
 
-        CartMeta meta;
+        uint32_t offset = 0;
 
-        meta.type = MetaType::Sprite;
-        meta.size = 0x2000;
-        out.try_write(&meta);
-        meta.type = MetaType::Font;
-        meta.size = 0x800;
-        out.try_write(&meta);
-        meta.type = MetaType::Map;
-        meta.size = 0x4000;
-        out.try_write(&meta);
-        meta.type = MetaType::Script;
-        meta.size = script_get().size();
+        out.write<uint32_t>('ctfh');
+        out.write<uint32_t>('sprt');
+        out.write<uint32_t>(0x2000);
+        out.write<uint32_t>(offset);
+        offset += 0x2000;
         
-        out.try_write(&meta);
-        out.try_write(mem()->sprite, 0x2000);
-        out.try_write(mem()->custom_font, 0x800);
-        out.try_write(mem()->map, 0x4000);
-        out.try_write(script_get().data(), script_get().size());
+        out.write<uint32_t>('ctfh');
+        out.write<uint32_t>('map');
+        out.write<uint32_t>(0x4000);
+        out.write<uint32_t>(offset);
+        offset += 0x4000;
 
+        out.write<uint32_t>('ctfh');
+        out.write<uint32_t>('font');
+        out.write<uint32_t>(0x800);
+        out.write<uint32_t>(offset);
+        offset += 0x800;
+
+        out.write<uint16_t>('ctfh');
+        out.write<uint32_t>('font');
+        out.write<uint32_t>(script_get().size());
+        out.write<uint32_t>(offset);
+        
+        uint32_t fh_offset = out.tellp();
+
+        out.write<uint32_t>('cart');
+        out.write<uint32_t>(4);
+        out.write<uint32_t>(fh_offset);
+        
         return true;
     }
 

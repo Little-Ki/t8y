@@ -33,36 +33,5 @@ namespace t8 {
             (t & 1) ? (buf[i].lo = val) : (buf[i].hi = val);
         }
     };
-
-    template <size_t W, size_t H>
-    class _1BitBuffer {
-    private:
-        uint8_t *buf{nullptr};
-
-    public:
-        _1BitBuffer(uint8_t *ptr) {
-            buf = ptr;
-        };
-
-        bool get(int x, int y) {
-            if (x < 0 || x >= W || y < 0 || y >= H)
-                return false;
-            auto t = (y * W + x);
-            auto i = t >> 3;
-            return buf[i] & (1 << (t & 0b111));
-        }
-
-        void set(int x, int y, bool val) {
-            if (x < 0 || x >= W || y < 0 || y >= H)
-                return;
-            auto t = (y * W + x);
-            auto i = t >> 3;
-            if (val) {
-                buf[i] |= (1 << (t & 0b111));
-            } else {
-                buf[i] &= ~(1 << (t & 0b111));
-            }
-        }
-    };
     
 }

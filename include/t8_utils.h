@@ -41,18 +41,8 @@ namespace t8 {
         return std::max(val, max(args...));
     }
 
-    template <typename T>
-    void byte_reverse(T &val) {
-        auto buf = reinterpret_cast<char *>(&val);
-        for (auto i = 0; i < (sizeof(T) >> 1); i++) {
-            std::swap(buf[i], buf[sizeof(T) - i - 1]);
-        }
-    }
+    uint32_t crc32(const uint8_t *data, size_t size);
 
-    template <typename T, typename... Args>
-    void byte_reverse(T &val, Args &...args) {
-        byte_reverse(val);
-        byte_reverse(args...);
-    }
-
+    uint32_t crc32(const char *data, size_t size);
+    
 }

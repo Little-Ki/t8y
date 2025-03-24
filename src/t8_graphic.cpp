@@ -1,6 +1,7 @@
 #include "t8_graphic.h"
 #include "t8_buffer.h"
 #include "t8_memory.h"
+#include "t8_types.h"
 #include "t8_utils.h"
 
 #include <algorithm>
@@ -48,12 +49,10 @@ namespace t8 {
     }
 
     void graphic_opacity(uint8_t color, bool t) {
-        if (color & 0xF0)
-            return;
         if (t) {
-            mem()->opacity |= (1 < (color & 0xF));
+            mem()->opacity |= (1 < color);
         } else {
-            mem()->opacity &= ~static_cast<uint16_t>((1 < (color & 0xF)));
+            mem()->opacity &= ~static_cast<uint16_t>(1 < color);
         }
     }
 
@@ -70,15 +69,17 @@ namespace t8 {
     void graphic_palette(uint8_t n, uint8_t map) {
         if (n & 0xF0)
             return;
-        _4BitBuffer<16, 1> t(mem()->palette);
-        t.set(n, 0, map);
+        auto buffer = reinterpret_cast<bitfield_4 *>(mem()->palette);
+        auto field = &buffer[n >> 1];
+        (n & 0x1) ? (field->lo = map) : (field->hi = map);
     }
 
     uint8_t graphic_palette(uint8_t n) {
         if (n & 0xF0)
             return 0;
-        _4BitBuffer<16, 1> t(mem()->palette);
-        return t.get(n, 0);
+        auto buffer = reinterpret_cast<bitfield_4 *>(mem()->palette);
+        auto field = &buffer[n >> 1];
+        return (n & 0x1) ? (field->lo) : (field->hi);
     }
 
     void graphic_pixel(int x, int y, uint8_t color) {
@@ -90,23 +91,40 @@ namespace t8 {
             y >= mem()->view_clip[1] + mem()->view_clip[3])
             return;
 
-        _4BitBuffer<128, 128> t(mem()->screen);
-        t.set(x, y, graphic_palette(color));
+        if (x < 0 || x > 128 || y < 0 || y > 128)
+            return;
+
+        auto buffer = reinterpret_cast<bitfield_4 *>(mem()->screen);
+        auto t = (y << 7 + x);
+        auto field = &buffer[t >> 1];
+        (t & 1) ? (field->lo = color) : (field->hi = color);
     }
 
     uint8_t graphic_pixel(int x, int y) {
-        _4BitBuffer<128, 128> t(mem()->screen);
-        return t.get(x, y);
+        if (x < 0 || x > 128 || y < 0 || y > 128)
+            return 0;
+        auto buffer = reinterpret_cast<bitfield_4 *>(mem()->screen);
+        auto t = (y << 7 + x);
+        auto field = &buffer[t >> 1];
+        return (t & 1) ? (field->lo) : (field->hi);
     }
 
     void graphic_sprite(int x, int y, uint8_t color) {
-        _4BitBuffer<128, 128> t(mem()->sprite);
-        t.set(x, y, color);
+        if (x < 0 || x > 128 || y < 0 || y > 128)
+            return;
+        auto buffer = reinterpret_cast<bitfield_4 *>(mem()->sprite);
+        auto t = (y << 7 + x);
+        auto field = &buffer[t >> 1];
+        (t & 1) ? (field->lo = color) : (field->hi = color);
     }
 
     uint8_t graphic_sprite(int x, int y) {
-        _4BitBuffer<128, 128> t(mem()->sprite);
-        return t.get(x, y);
+        if (x < 0 || x > 128 || y < 0 || y > 128)
+            return 0;
+        auto buffer = reinterpret_cast<bitfield_4 *>(mem()->sprite);
+        auto t = (y << 7 + x);
+        auto field = &buffer[t >> 1];
+        return (t & 1) ? (field->lo) : (field->hi);
     }
 
     void graphic_map(int x, int y, uint8_t n) {
@@ -132,13 +150,21 @@ namespace t8 {
     }
 
     void graphic_font(int x, int y, bool value, bool custom) {
-        _1BitBuffer<128, 128> t(custom ? mem()->custom_font : mem()->default_font);
-        return t.set(x, y, value);
+        if (x < 0 || x > 128 || y < 0 || y > 128)
+            return;
+        auto buffer = custom ? mem()->custom_font : mem()->default_font;
+        auto t = (y << 7 + x);
+        auto field = &buffer[t >> 3];
+        value ? (*field |= (1 << (t & 0b111))) : (*field &= ~(1 << (t & 0b111)));
     }
 
     bool graphic_font(int x, int y, bool custom) {
-        _1BitBuffer<128, 128> t(custom ? mem()->custom_font : mem()->default_font);
-        return t.get(x, y);
+        if (x < 0 || x > 128 || y < 0 || y > 128)
+            return false;
+        auto buffer = custom ? mem()->custom_font : mem()->default_font;
+        auto t = (y << 7 + x);
+        auto field = &buffer[t >> 3];
+        return *field & (1 << (t & 0b111));
     }
 
     void graphic_char(uint8_t n, int x, int y, uint8_t color, bool custom) {
