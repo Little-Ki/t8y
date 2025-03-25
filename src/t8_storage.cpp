@@ -71,10 +71,6 @@ namespace t8 {
 
         auto ch = read_ch(in);
 
-        if (ch.signature != 'cart') {
-            return false;
-        }
-
         std::vector<FileHeader> fhs;
         auto count = ch.fh_count;
 
@@ -121,6 +117,7 @@ namespace t8 {
         out.write_buf(script_get().data(), script_get().size());
 
         uint32_t offset = 0;
+        uint32_t fh_offset = out.tellp();
 
         out.write<uint32_t>('ctfh');
         out.write<uint32_t>('sprt');
@@ -141,11 +138,9 @@ namespace t8 {
         offset += 0x800;
 
         out.write<uint16_t>('ctfh');
-        out.write<uint32_t>('font');
+        out.write<uint32_t>('scrp');
         out.write<uint32_t>(script_get().size());
         out.write<uint32_t>(offset);
-        
-        uint32_t fh_offset = out.tellp();
 
         out.write<uint32_t>('cart');
         out.write<uint32_t>(4);

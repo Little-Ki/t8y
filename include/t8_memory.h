@@ -16,6 +16,8 @@ namespace t8 {
 
         uint8_t view_clip[4];
         int8_t draw_offset[2];
+
+        uint32_t cache[256];
     };
 
     Memory *mem();

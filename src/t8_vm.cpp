@@ -5,12 +5,24 @@
 #include "t8_gamepad.h"
 #include "t8_graphic.h"
 #include "t8_keybd.h"
+#include "t8_memory.h"
 #include "t8_mouse.h"
 #include "t8_signal.h"
 
 namespace t8 {
 
     VMState state;
+
+    int vm_call_pmem(const VMCall &call) {
+        if (call.is<uint8_t>()) {
+            return call.ret(
+                mem()->cache[call.get<uint8_t>(1)]);
+        }
+        if (call.is<uint8_t, uint32_t>()) {
+            mem()->cache[call.get<uint8_t>(1)] = call.get<uint32_t>(2);
+        }
+        return 0;
+    }
 
     int vm_call_clip(const VMCall &call) {
         if (call.is<int, int, int, int>()) {
@@ -468,9 +480,10 @@ namespace t8 {
         vm_bind<&vm_call_log>("log");
         vm_bind<&vm_call_time>("time");
         vm_bind<&vm_call_tstamp>("tstamp");
+        vm_bind<&vm_call_pmem>("pmem");
 
         state.timer.reset();
-        
+
         return true;
     }
 
