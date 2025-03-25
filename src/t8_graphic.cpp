@@ -1,5 +1,4 @@
 #include "t8_graphic.h"
-#include "t8_buffer.h"
 #include "t8_memory.h"
 #include "t8_types.h"
 #include "t8_utils.h"
@@ -263,72 +262,6 @@ namespace t8 {
                 for (auto x = l; x < r; x += 1) {
                     graphic_pixel(x, y, color);
                 }
-            }
-        }
-    }
-
-    void graphic_fragment(int x0, int y0, int z0, int u0, int v0, int x1, int y1, int z1, int u1, int v1, int x2, int y2, int z2, int u2, int v2) {
-        struct vert {
-            float x, y, z, u, v;
-        };
-
-        const auto take = [&](int x, int y) -> uint8_t {
-            const auto spriteId = graphic_map((x / 8), (y / 8));
-            const auto color = graphic_sprite(
-                (spriteId & 0xF) + x % 8,
-                (spriteId >> 4) + y % 8);
-            return spriteId;
-        };
-
-        const auto edge = [](const vert &v0, const vert &v1, const vert p) -> float {
-            return (v1.x - v0.x) * (p.y - v0.y) - (v1.y - v0.y) * (p.x - v0.x);
-        };
-
-        vert verts[3] = {
-            {x0, y0, z0, u0, v0}, {x1, y1, z1, u1, v1}, {x2, y2, z2, u2, v2}};
-
-        for (auto &v : verts) {
-            if (v.z == 0)
-                v.z = 0.00001f;
-            v.z = 1.f / v.z;
-
-            v.x *= v.z;
-            v.y *= v.z;
-            v.x = (v.x * 0.5 + 0.5) * 128;
-            v.y = (v.y * 0.5 + 0.5) * 128;
-
-            v.u *= v.z;
-            v.v *= v.z;
-        }
-
-        const auto l = std::clamp(static_cast<int>(min(verts[0].x, verts[1].x, verts[2].x)), 0, 128);
-        const auto r = std::clamp(static_cast<int>(max(verts[0].x, verts[1].x, verts[2].x)), 0, 128);
-        const auto t = std::clamp(static_cast<int>(min(verts[0].y, verts[1].y, verts[2].y)), 0, 128);
-        const auto b = std::clamp(static_cast<int>(max(verts[0].y, verts[1].y, verts[2].y)), 0, 128);
-
-        const auto demon = 1.f / edge(verts[0], verts[1], verts[2]);
-
-        for (auto y = t; y < b; y++) {
-            for (auto x = l; x < r; x++) {
-                vert p = {x + 0.5f, y + 0.5f};
-
-                const float b[3] = {
-                    demon * edge(verts[1], verts[2], p),
-                    demon * edge(verts[2], verts[0], p),
-                    demon * edge(verts[0], verts[1], p)};
-
-                if (b[0] < 0 || b[1] < 0 || b[2] < 0)
-                    continue;
-
-                const auto z = 1 / (b[0] * verts[0].z + b[1] * verts[1].z + b[2] * verts[2].z);
-
-                if (z < 1)
-                    continue;
-
-                const auto u = z * (b[0] * verts[0].u + b[1] * verts[1].u + b[2] * verts[2].u);
-                const auto v = z * (b[0] * verts[0].v + b[1] * verts[1].v + b[2] * verts[2].v);
-
-                graphic_pixel(p.x, 128 - p.y, take(u, v));
             }
         }
     }

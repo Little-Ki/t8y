@@ -57,9 +57,4 @@ namespace t8 {
 
     void graphic_rect(int x, int y, int w, int h, uint8_t color, bool fill = false);
 
-    void graphic_fragment(
-        int x0, int y0, int z0, int u0, int v0,
-        int x1, int y1, int z1, int u1, int v1,
-        int x2, int y2, int z2, int u2, int v2);
-
 }
