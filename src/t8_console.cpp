@@ -119,7 +119,7 @@ namespace t8 {
 
         if (str_equals(payload[0], "run")) {
             if (console_validate(payload, 1)) {
-                signal_send(Signal::SwapExecutor);
+                signal_push(Signal::SwapExecutor);
                 return true;
             }
         }
@@ -132,7 +132,7 @@ namespace t8 {
     void console_update() {
 
         if (keybd_pressed(41)) {
-            signal_send(Signal::SwapEditor);
+            signal_push(Signal::SwapEditor);
             return;
         }
 
@@ -266,7 +266,7 @@ namespace t8 {
     }
 
     void console_enter() {
-        signal_send(Signal::StartInput);
+        signal_push(Signal::StartInput);
         graphic_reset();
 
         if (state.first_time) {
@@ -278,7 +278,7 @@ namespace t8 {
     }
 
     void console_leave() {
-        signal_send(Signal::StopInput);
+        signal_push(Signal::StopInput);
     }
 
     void console_print(const std::string &text, bool err) {

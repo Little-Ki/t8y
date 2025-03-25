@@ -27,7 +27,7 @@ namespace t8 {
             if (keybd_pressed(40) || keybd_pressed(88)) {
                 state.paused = false;
                 if (state.select == 1) {
-                    signal_send(Signal::SwapConsole);
+                    signal_push(Signal::SwapConsole);
                 }
             }
         }
@@ -36,7 +36,7 @@ namespace t8 {
         if (steps < 3 && !state.paused) {
             for (auto i = 0; i < steps; i++) {
                 if (!vm_execute("update")) {
-                    signal_send(Signal::Exception, vm_error());
+                    signal_push(Signal::Exception, vm_error());
                     return;
                 };
             }
@@ -46,7 +46,7 @@ namespace t8 {
 
     void executor_draw() {
         if (!vm_execute("draw")) {
-            signal_send(Signal::Exception, vm_error());
+            signal_push(Signal::Exception, vm_error());
             return;
         };
 
@@ -79,18 +79,18 @@ namespace t8 {
         state.timer.reset();
 
         if (!vm_initialize(script_get())) {
-            signal_send(Signal::Exception, vm_error());
+            signal_push(Signal::Exception, vm_error());
             return;
         }
 
         if (!vm_execute("init")) {
-            signal_send(Signal::Exception, vm_error());
+            signal_push(Signal::Exception, vm_error());
             return;
         };
 
         graphic_clear(0);
 
-        signal_send(Signal::StopInput);
+        signal_push(Signal::StopInput);
     }
 
     void executor_leave() {

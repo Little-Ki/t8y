@@ -17,7 +17,7 @@ namespace t8 {
 
     bool signal_empty();
 
-    void signal_send(Signal type, std::any value = {});
+    void signal_push(Signal type, std::any value = {});
 
     const signal_t& signal_peek();
 

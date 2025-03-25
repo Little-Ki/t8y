@@ -752,22 +752,22 @@ namespace t8 {
 
     void editor_update_tab() {
         if (mouse_clicked(1, 1, 8, 8)) {
-            signal_send(Signal::StartInput);
+            signal_push(Signal::StartInput);
             state.tab = EditorTab::Script;
         }
         if (mouse_clicked(10, 1, 8, 8)) {
-            signal_send(Signal::StopInput);
+            signal_push(Signal::StopInput);
             state.tab = EditorTab::Sheet;
         }
         if (mouse_clicked(19, 1, 8, 8)) {
-            signal_send(Signal::StopInput);
+            signal_push(Signal::StopInput);
             state.tab = EditorTab::Map;
         }
     }
 
     void editor_update() {
         if (keybd_pressed(41)) {
-            signal_send(Signal::SwapConsole);
+            signal_push(Signal::SwapConsole);
             return;
         }
 
@@ -806,7 +806,7 @@ namespace t8 {
         state.editor.setText(script_get());
 
         if (state.tab == EditorTab::Script) {
-            signal_send(Signal::StartInput);
+            signal_push(Signal::StartInput);
         }
 
         state.timer.reset();

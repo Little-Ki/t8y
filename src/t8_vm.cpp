@@ -411,7 +411,7 @@ namespace t8 {
 
     int vm_call_log(const VMCall &call) {
         if (call.is<std::string>()) {
-            signal_send(Signal::Print, call.get<std::string>(1));
+            signal_push(Signal::Print, call.get<std::string>(1));
         }
         return 0;
     }
