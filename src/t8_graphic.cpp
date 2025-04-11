@@ -94,7 +94,7 @@ namespace t8 {
             return;
 
         auto buffer = reinterpret_cast<bitfield_4 *>(mem()->screen);
-        auto t = (y << 7 + x);
+        auto t = (y * 128 + x);
         auto field = &buffer[t >> 1];
         (t & 1) ? (field->lo = color) : (field->hi = color);
     }
@@ -103,7 +103,7 @@ namespace t8 {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return 0;
         auto buffer = reinterpret_cast<bitfield_4 *>(mem()->screen);
-        auto t = (y << 7 + x);
+        auto t = (y * 128 + x);
         auto field = &buffer[t >> 1];
         return (t & 1) ? (field->lo) : (field->hi);
     }
@@ -112,7 +112,7 @@ namespace t8 {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return;
         auto buffer = reinterpret_cast<bitfield_4 *>(mem()->sprite);
-        auto t = (y << 7 + x);
+        auto t = (y * 128 + x);
         auto field = &buffer[t >> 1];
         (t & 1) ? (field->lo = color) : (field->hi = color);
     }
@@ -121,7 +121,7 @@ namespace t8 {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return 0;
         auto buffer = reinterpret_cast<bitfield_4 *>(mem()->sprite);
-        auto t = (y << 7 + x);
+        auto t = (y * 128 + x);
         auto field = &buffer[t >> 1];
         return (t & 1) ? (field->lo) : (field->hi);
     }
@@ -152,7 +152,7 @@ namespace t8 {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return;
         auto buffer = custom ? mem()->custom_font : mem()->default_font;
-        auto t = (y << 7 + x);
+        auto t = (y * 128 + x);
         auto field = &buffer[t >> 3];
         value ? (*field |= (1 << (t & 0b111))) : (*field &= ~(1 << (t & 0b111)));
     }
@@ -161,7 +161,7 @@ namespace t8 {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return false;
         auto buffer = custom ? mem()->custom_font : mem()->default_font;
-        auto t = (y << 7 + x);
+        auto t = (y * 128 + x);
         auto field = &buffer[t >> 3];
         return *field & (1 << (t & 0b111));
     }

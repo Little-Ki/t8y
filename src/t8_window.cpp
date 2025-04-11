@@ -12,7 +12,7 @@ namespace t8 {
             return false;
         }
 
-        window = SDL_CreateWindow("T8Y", width * pixel_size, height * pixel_size, 0);
+        window = SDL_CreateWindow("T8Y", width * pixel_size, height * pixel_size, SDL_WINDOW_OPENGL);
         if (!window) {
             SDL_Log("Could not create a window: %s", SDL_GetError());
             return false;
