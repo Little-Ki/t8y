@@ -615,7 +615,7 @@ namespace t8 {
         graphic_camera(8, 11);
         graphic_clip(8, 11, 120, 117);
 
-        if ((state.timer.ticks() >> 5) % 2)
+        if ((timer_ticks() >> 5) % 2)
             graphic_rect(
                 (cursor.column - state.edit_x) << 2,
                 (cursor.line - state.edit_y) << 3,
@@ -809,7 +809,7 @@ namespace t8 {
             signal_push(Signal::StartInput);
         }
 
-        state.timer.reset();
+        timer_reset();
     }
 
     void editor_leave() {

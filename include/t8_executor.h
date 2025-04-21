@@ -5,7 +5,6 @@
 namespace t8 {
 
     struct ExecutorState {
-        Timer timer;
         uint8_t select;
         bool paused{false};
     };

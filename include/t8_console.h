@@ -25,7 +25,6 @@ namespace t8 {
         std::string input;
         size_t cursor{0};
         ConsoleLines lines;
-        Timer timer; 
     };
 
     void console_update();

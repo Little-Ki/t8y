@@ -32,7 +32,7 @@ namespace t8 {
             }
         }
 
-        auto steps = state.timer.steps();
+        auto steps = tiemr_steps();
         if (steps < 3 && !state.paused) {
             for (auto i = 0; i < steps; i++) {
                 if (!vm_execute("update")) {
@@ -41,7 +41,8 @@ namespace t8 {
                 };
             }
         }
-        state.timer.consume(steps);
+
+        timer_consume(steps);
     }
 
     void executor_draw() {
@@ -75,9 +76,6 @@ namespace t8 {
     }
 
     void executor_enter() {
-
-        state.timer.reset();
-
         if (!vm_initialize(script_get())) {
             signal_push(Signal::Exception, vm_error());
             return;
@@ -91,6 +89,8 @@ namespace t8 {
         graphic_clear(0);
 
         signal_push(Signal::StopInput);
+
+        timer_reset();
     }
 
     void executor_leave() {

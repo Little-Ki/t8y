@@ -250,7 +250,7 @@ namespace t8 {
 
         for (auto i = 0ULL; i <= state.input.size(); i++) {
             if (state.cursor == i) {
-                if ((state.timer.ticks() >> 5) % 2) {
+                if ((timer_ticks() >> 5) % 2) {
                     graphic_rect(x, y, 1, 7, 3);
                 }
             }
@@ -274,7 +274,7 @@ namespace t8 {
             console_clear();
         }
 
-        state.timer.reset();
+        timer_reset();
     }
 
     void console_leave() {

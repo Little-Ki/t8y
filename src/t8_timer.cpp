@@ -1,24 +1,28 @@
 #include "t8_timer.h"
 
 namespace t8 {
-    int Timer::ticks() {
+
+    TimerState state;
+
+    int timer_ticks() {
         const auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now() - _started
+            std::chrono::system_clock::now() - state.referece_time
         ).count();
         const auto ticks = static_cast<int>(delta * 0.064f);
 
         return ticks;
     }
 
-    int Timer::steps() {
-        return ticks() - _passed;
+    int timer_steps() {
+        return timer_ticks() - state.tick_passed;
     }
 
-    void Timer::consume(int ticks) {
-        _passed += ticks;
+    void timer_consume(int ticks) {
+        state.tick_passed += ticks;
     }
 
-    void Timer::reset() {
-        _started = std::chrono::system_clock::now();
+    void timer_reset() {
+        state.referece_time = std::chrono::system_clock::now();
     }
+    
 }

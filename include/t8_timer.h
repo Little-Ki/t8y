@@ -3,20 +3,17 @@
 
 namespace t8 {
 
-    class Timer {
-    public:
-        int ticks();
+    struct TimerState {
+        std::chrono::time_point<std::chrono::system_clock> referece_time = std::chrono::system_clock::now();
+        int tick_passed;
+    }
 
-        int steps();
+    int timer_ticks();
 
-        void consume(int ticks);
+    int timer_steps();
 
-        void reset();
+    void timer_consume(int ticks);
 
-    private:
-        std::chrono::time_point<std::chrono::system_clock> _started = std::chrono::system_clock::now();
+    void timer_reset();
 
-        int _passed{0};
-    };
-    
 }

@@ -35,8 +35,6 @@ namespace t8 {
         EditorTab tab = EditorTab::Sheet;
 
         TextEdit editor;
-
-        Timer timer;
     };
 
     void editor_update();

@@ -133,7 +133,6 @@ namespace t8 {
     struct VMState {
         lua_State *vm{nullptr};
         std::string err_msg;
-        Timer timer;
     };
 
     using vm_call_fn = int (*)(const VMCall &call);
