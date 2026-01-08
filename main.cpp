@@ -1,12 +1,14 @@
 
 #include <iostream>
 
-#include "t8_emulator.h"
+#include "t8_core_emulator.h"
+
+using namespace t8::core;
 
 int main(int argc, char *argv[]) {
-    if (t8::emulator_initialize()) {
-        t8::emulator_run();
-        t8::emulator_quit();
+    if (emulator_initialize()) {
+        emulator_run();
+        emulator_quit();
     }
     
     return 0;

@@ -24,9 +24,14 @@ if(CMAKE_SYSTEM_NAME MATCHES Emscripten)
 	set(CMAKE_EXECUTABLE_SUFFIX ".html" CACHE INTERNAL "")
 endif()
 
+add_compile_options(/source-charset:utf-8 /execution-charset:utf-8)
+
+
 include_directories(${PROJECT_SOURCE_DIR}/third_party)
 include_directories(${PROJECT_SOURCE_DIR}/include)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC_LIST)
+include_directories(${PROJECT_SOURCE_DIR}/include/text_editor)
+file(GLOB_RECURSE SRC_LIST ${PROJECT_SOURCE_DIR}/src/*.cpp)
+# aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC_LIST)
 
 target_sources(${EXECUTABLE_NAME} 
 PRIVATE 
