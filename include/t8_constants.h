@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <SDL3/SDL_scancode.h>
 
 #define RGBA(r, g, b, a) (((r & 0xff) << 24) | ((g & 0xff) << 16) | ((b & 0xff) << 8) | (a & 0xff))
 
@@ -15,4 +16,14 @@ namespace t8 {
     constexpr uint32_t SIGNAL_STOP_INPUT = 4;
     constexpr uint32_t SIGNAL_PRINT = 5;
     constexpr uint32_t SIGNAL_EXCEPTION = 5;
+
+    constexpr auto SCANCODE_ESC = SDL_SCANCODE_ESCAPE;
+    constexpr auto SCANCODE_LEFT = SDL_SCANCODE_LEFT;
+    constexpr auto SCANCODE_UP = SDL_SCANCODE_UP;
+    constexpr auto SCANCODE_RIGHT = SDL_SCANCODE_RIGHT;
+    constexpr auto SCANCODE_DOWN = SDL_SCANCODE_DOWN;
+    constexpr auto SCANCODE_RETURN = SDL_SCANCODE_RETURN;
+    constexpr auto SCANCODE_ENTER = SDL_SCANCODE_KP_ENTER;
+    constexpr auto SCANCODE_BACKSPACE = SDL_SCANCODE_BACKSPACE;
+    constexpr auto SCANCODE_DELETE = SDL_SCANCODE_DELETE;
 }

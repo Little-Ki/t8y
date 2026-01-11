@@ -23,7 +23,7 @@ namespace t8::core {
     }
 
     bool input_empty() {
-        return false;
+        return context()->inputs.empty();
     }
 
     void input_push(std::string &&text) {

@@ -3,6 +3,7 @@
 #include <cstdint>
 
 namespace t8::input {
+    
     void keyboard_flush();
 
     void keyboard_button(uint8_t btn, uint16_t mod, bool repeat, bool down);
