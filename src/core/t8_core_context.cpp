@@ -7,41 +7,18 @@ namespace t8::core {
         return instance;
     }
 
-    bool signal_empty() {
-        return context()->signals.empty();
+    std::queue<std::string> &ctx_inputs()
+    {
+        return context()->inputs;
     }
 
-    void signal_push(uint32_t type, signal_value_t value) {
-        return context()->signals.push({type, value});
+    std::queue<SignalRecord> &ctx_signals()
+    {
+        return context()->signals;
     }
 
-    SignalRecord signal_pop() {
-        assert(!signal_empty());
-        const auto record = std::move(context()->signals.front());
-        context()->signals.pop();
-        return record;
-    }
-
-    bool input_empty() {
-        return context()->inputs.empty();
-    }
-
-    void input_push(std::string &&text) {
-        context()->inputs.push(std::move(text));
-    }
-
-    std::string input_pop() {
-        assert(!input_empty());
-        const auto record = std::move(context()->inputs.front());
-        context()->inputs.pop();
-        return record;
-    }
-
-    void set_script(std::string &&text) {
-        context()->script = std::move(text);
-    }
-
-    const std::string &get_script() {
+    std::string &ctx_script()
+    {
         return context()->script;
     }
 }

@@ -764,7 +764,7 @@
 
     void editor_update_tab() {
         if (mouse_clicked(1, 1, 8, 8)) {
-            signal_push(Signal::StartInput);
+            signal_push({Signal::StartInput});
             state.tab = EditorPage::Script;
         }
         if (mouse_clicked(10, 1, 8, 8)) {

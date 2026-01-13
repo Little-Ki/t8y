@@ -26,4 +26,8 @@ namespace t8 {
     constexpr auto SCANCODE_ENTER = SDL_SCANCODE_KP_ENTER;
     constexpr auto SCANCODE_BACKSPACE = SDL_SCANCODE_BACKSPACE;
     constexpr auto SCANCODE_DELETE = SDL_SCANCODE_DELETE;
+    constexpr auto SCANCODE_TAB = SDL_SCANCODE_TAB;
+    constexpr auto SCANCODE_A = SDL_SCANCODE_A;
+    constexpr auto SCANCODE_R = SDL_SCANCODE_R;
+    constexpr auto SCANCODE_Z = SDL_SCANCODE_Z;
 }

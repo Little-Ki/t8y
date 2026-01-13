@@ -161,7 +161,7 @@ namespace t8::core {
             break;
         }
         case SDL_EVENT_TEXT_INPUT: {
-            input_push(event.text.text);
+            ctx_inputs().push(event.text.text);
             break;
         }
         case SDL_EVENT_GAMEPAD_AXIS_MOTION:
@@ -175,9 +175,10 @@ namespace t8::core {
 
     void emulator_handle_signal() {
 
-        while (!signal_empty()) {
-            const auto s = signal_pop();
-
+        while (!ctx_signals().empty()) {
+            const auto s = ctx_signals().front();
+            ctx_signals().pop();
+            
             if (s.type == SIGNAL_START_INPUT) {
                 window_input(true);
             }

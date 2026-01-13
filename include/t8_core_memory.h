@@ -9,7 +9,7 @@ namespace t8::core {
 
         uint8_t map[0x4000];
 
-        uint32_t palette[0xF];
+        uint32_t palette[0xF0];
         uint8_t palette_mapping[0x8];
         uint16_t palette_mask;
 

@@ -138,7 +138,7 @@ namespace t8::scene {
 
         if (str_equals(payload[0], "run")) {
             if (console_validate(payload, 1)) {
-                signal_push({SIGNAL_SWAP_EXECUTOR});
+                ctx_signals().push({SIGNAL_SWAP_EXECUTOR});
                 return true;
             }
         }
@@ -150,12 +150,14 @@ namespace t8::scene {
 
     void console_update() {
         if (keyboard_pressed(SCANCODE_ESC)) {
-            signal_push({SIGNAL_SWAP_EDITOR});
+            ctx_signals().push({SIGNAL_SWAP_EDITOR});
             return;
         }
 
-        if (!input_empty()) {
-            const auto text = input_pop();
+        if (!ctx_inputs().empty()) {
+            const auto text = ctx_inputs().back();
+            ctx_inputs().pop();
+
             for (const auto &ch : text)
                 if (!(ch & 0x80) && input.size() < 64) {
                     input.insert(std::next(input.begin(), cursor), ch);
@@ -303,7 +305,7 @@ namespace t8::scene {
     }
 
     void console_enter() {
-        signal_push({SIGNAL_START_INPUT});
+        ctx_signals().push({SIGNAL_START_INPUT});
         painter_reset();
 
         if (first_time) {
@@ -315,7 +317,7 @@ namespace t8::scene {
     }
 
     void console_leave() {
-        signal_push({SIGNAL_STOP_INPUT});
+        ctx_signals().push({SIGNAL_STOP_INPUT});
     }
 
     void console_print(const std::string &text, bool err) {

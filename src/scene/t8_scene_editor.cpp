@@ -36,9 +36,11 @@ namespace t8::scene
 
     struct ScriptEditorState
     {
-        int scroll_x;
-        int scroll_y;
-        int visual_column;
+        int scroll_x = 0;
+        int scroll_y = 0;
+        int visual_column = 0;
+        bool move_up = false;
+        bool move_down = false;
         t8::text_editor::TextEditor editor;
     };
 
@@ -60,11 +62,12 @@ namespace t8::scene
     {
         uint8_t sprite_id = 0;
         uint8_t zoom = 1;
+        uint8_t page = 0;
         int x = 0;
         int y = 11;
     };
 
-    EditorPage page = EditorPage::Sprite;
+    EditorPage page = EditorPage::Script;
     ScriptEditorState script_state;
     SheetEditorState sheet_state;
     MapEditorState map_state;
@@ -81,17 +84,17 @@ namespace t8::scene
     {
         if (mouse_clicked(1, 1, 8, 8))
         {
-            signal_push({SIGNAL_START_INPUT});
+            ctx_signals().push({SIGNAL_START_INPUT});
             page = EditorPage::Script;
         }
         if (mouse_clicked(10, 1, 8, 8))
         {
-            signal_push({SIGNAL_STOP_INPUT});
+            ctx_signals().push({SIGNAL_STOP_INPUT});
             page = EditorPage::Sprite;
         }
         if (mouse_clicked(19, 1, 8, 8))
         {
-            signal_push({SIGNAL_STOP_INPUT});
+            ctx_signals().push({SIGNAL_STOP_INPUT});
             page = EditorPage::Map;
         }
     }
@@ -562,6 +565,8 @@ namespace t8::scene
                         replace,
                         sheet_state.color,
                         draw_target);
+
+                    sheet_state.tool = EditorTool::Pencil;
                 }
             }
             if (sheet_state.tool == EditorTool::Pencil)
@@ -589,16 +594,390 @@ namespace t8::scene
         }
     }
 
+    void editor_draw_map_edit()
+    {
+        const auto sprite_id = map_state.sprite_id;
+        const auto id_x = (sprite_id & 0xF);
+        const auto id_y = (sprite_id >> 4) & 0xF;
+        const auto sprite_x = id_x << 3;
+        const auto sprite_y = id_y << 3;
+
+        painter_rect(0, 11, 128, 84, 10, true);
+
+        // 网格背景
+        for (auto y = 11; y < 85; y++)
+        {
+            for (auto x = 0; x < 128; x++)
+            {
+                if ((x + y) & 1)
+                {
+                    painter_pixel(x, y, 8);
+                }
+                else
+                {
+                    painter_pixel(x, y, 0);
+                }
+            }
+        }
+
+        painter_rect(0, 85, 128, 10, 14, true);
+
+        {
+            for (auto i = 0; i < 4; i++)
+            {
+                painter_rect(99 + i * 6, 87, 7, 6, 13);
+                painter_rect(100 + i * 6, 88, 5, 4, mouse_inside(100 + i * 6, 88, 5, 4) ? 14 : 15, true);
+            }
+
+            painter_rect(98 + map_state.page * 6, 86, 9, 8, 13);
+            painter_rect(99 + map_state.page * 6, 87, 7, 6, 3, true);
+        }
+
+        // 下方精灵图预览及选择
+        {
+
+            for (auto dy = 0; dy < 32; dy++)
+            {
+                for (auto dx = 0; dx < 128; dx++)
+                {
+                    auto color = painter_sprite(dx, (map_state.page << 5) + dy);
+                    painter_pixel(dx, 96 + dy, color);
+                }
+            }
+
+            painter_clip(0, 96, 128, 32);
+            // 选择的区域
+            painter_rect(
+                sprite_x, 96 + sprite_y - (map_state.page << 5),
+                8, 8, 1);
+            painter_clip();
+        }
+
+        {
+            painter_clip(0, 11, 128, 74);
+
+            auto chunk_size = 8 >> (map_state.zoom >> 1);
+            auto step = map_state.zoom;
+
+            painter_rect(map_state.x - 1, map_state.y - 1, 128 * chunk_size + 2, 128 * chunk_size + 2, 2);
+
+            auto l = std::clamp(-map_state.x / chunk_size, 0, 128);
+            auto t = std::clamp(-map_state.y / chunk_size, 0, 128);
+            auto r = std::clamp((128 - map_state.x) / chunk_size + 1, 0, 128);
+            auto b = std::clamp((128 - map_state.y) / chunk_size + 1, 0, 128);
+
+            for (auto y = t; y < b; y++)
+            {
+                for (auto x = l; x < r; x++)
+                {
+                    auto id = painter_map(x, y);
+                    auto spX = (id & 0xF) << 3;
+                    auto spY = ((id >> 4) & 0xF) << 3;
+
+                    for (auto inY = 0; inY < chunk_size; inY++)
+                    {
+                        for (auto inX = 0; inX < chunk_size; inX++)
+                        {
+                            auto color = id == 0 ? 0 : painter_sprite(spX + inX * step, spY + inY * step);
+                            painter_pixel(
+                                map_state.x + x * chunk_size + inX,
+                                map_state.y + y * chunk_size + inY,
+                                color);
+                        }
+                    }
+                }
+            }
+
+            if (mouse_inside(0, 11, 128, 74))
+            {
+                auto innerX = mouse_x() - map_state.x;
+                auto innerY = mouse_y() - map_state.y;
+                innerX /= chunk_size;
+                innerY /= chunk_size;
+
+                if (innerX >= 0 && innerX < 128 && innerY >= 0 && innerY < 128)
+                {
+                    painter_rect(map_state.x + innerX * chunk_size - 1, map_state.y + innerY * chunk_size - 1, chunk_size + 2, chunk_size + 2, 1);
+                }
+            }
+
+            painter_clip();
+        }
+    }
+
+    void editor_update_map_edit()
+    {
+
+        // 选择分组
+        for (auto i = 0; i < 4; i++)
+        {
+            if (mouse_clicked(100 + i * 6, 88, 5, 4))
+            {
+                map_state.page = i;
+            }
+        }
+
+        // 选择精灵
+        if (mouse_dragging(0, 96, 128, 32))
+        {
+            auto local_x = mouse_x();
+            auto local_y = mouse_y() - 96;
+            local_x >>= 3;
+            local_y >>= 3;
+            auto next_id = ((local_y << 4) | (local_x & 0xF)) & 0xFF;
+            next_id += (map_state.page << 6);
+            map_state.sprite_id = next_id;
+        }
+        else if (mouse_inside(0, 96, 128, 32))
+        {
+            if (mouse_z() < 0)
+            {
+                map_state.page = std::clamp(map_state.page + 1, 0, 3);
+            }
+            if (mouse_z() > 0)
+            {
+                map_state.page = std::clamp(map_state.page - 1, 0, 3);
+            }
+        }
+
+        // 绘制地图
+        if (mouse_dragging(0, 11, 128, 74))
+        {
+            auto local_x = mouse_x() - map_state.x;
+            auto local_y = mouse_y() - map_state.y;
+            local_x /= 8 >> (map_state.zoom >> 1);
+            local_y /= 8 >> (map_state.zoom >> 1);
+            painter_map(local_x, local_y, map_state.sprite_id);
+        }
+        else if (mouse_dragging(0, 11, 128, 74, 2))
+        {
+            map_state.x += mouse_dx();
+            map_state.y += mouse_dy();
+        }
+        else if (mouse_inside(0, 11, 128, 74))
+        {
+            const auto z = mouse_z();
+            if (z != 0)
+            {
+                const auto next = std::clamp(z < 0 ? map_state.zoom << 1 : map_state.zoom >> 1, 1, 4);
+                const auto scale = z < 0 ? 0.5f : 2.0f;
+                if (next != map_state.zoom)
+                {
+                    map_state.x = 64 + static_cast<int>((map_state.x - 64) * scale);
+                    map_state.y = 48 + static_cast<int>((map_state.y - 48) * scale);
+                    map_state.zoom = next;
+                }
+            }
+        }
+    }
+
+    void editor_draw_script_edit()
+    {
+        painter_rect(0, 11, 8, 117, 14, true);
+        painter_rect(8, 11, 120, 117, 15, true);
+
+        const auto sel_start = script_state.editor.sel_start();
+        const auto sel_end = script_state.editor.sel_end();
+        const auto cursor = script_state.editor.sel_end();
+
+        painter_camera(8, 11);
+        painter_clip(8, 11, 120, 117);
+
+        auto x = script_state.scroll_x * 4;
+        auto y = script_state.scroll_y * 8;
+
+        auto line_start = -script_state.scroll_y;
+        auto line_count = script_state.editor.line_count();
+
+        if (script_state.editor.size() > 0)
+        {
+
+            for (
+                auto line = line_start;
+                line < line_count && line < line_start + 16;
+                line += 1)
+            {
+                if (line < 0)
+                    continue;
+
+                auto line_size = script_state.editor.line_size(line);
+                auto line_start = script_state.editor.line_start(line);
+
+                for (auto col = 0; col < line_size; col += 1)
+                {
+                    const auto ch = script_state.editor.get_char(line, col);
+                    const auto current_index = line_start + col;
+                    if ((timer_ticks() >> 5) % 2 && current_index == cursor)
+                        painter_rect(x, y, 1, 7, 3, true);
+
+                    if (current_index >= sel_start && current_index < sel_end)
+                        painter_rect(x, y, 4, 7, 3, true);
+
+                    if (ch == '\t')
+                    {
+                        x += 8;
+                    }
+                    else if (ch != '\n')
+                    {
+                        painter_char(ch, x, y, 1);
+                        x += 4;
+                    }
+                }
+
+                x = script_state.scroll_x * 8;
+                y += 8;
+            }
+        }
+
+        painter_camera();
+        painter_clip();
+    }
+
+    void editor_update_script_edit()
+    {
+        auto auto_scroll = true;
+        auto cursor = script_state.editor.cursor();
+
+        if (!context()->inputs.empty())
+        {
+            const auto text = context()->inputs.back();
+            context()->inputs.pop();
+
+            for (const auto &ch : text)
+                if (ch & 0x80)
+                    return;
+
+            script_state.editor.insert(text);
+        }
+        else
+        {
+            if (keyboard_triggered(SCANCODE_ENTER) ||
+                keyboard_triggered(SCANCODE_RETURN))
+            {
+                script_state.editor.insert('\n');
+            }
+            else if (keyboard_triggered(SCANCODE_BACKSPACE))
+            {
+                script_state.editor.erase_before();
+            }
+            // else if (keyboard_triggered(82))
+            // {
+            //     state.editor.move(MoveType::PrevLine, !keyboard_shift());
+            // }
+            // else if (keyboard_triggered(81))
+            // {
+            //     state.editor.move(MoveType::NextLine, !keyboard_shift());
+            // }
+            else if (keyboard_triggered(SCANCODE_LEFT))
+            {
+                if (cursor > 0)
+                {
+                    script_state.editor.collapse(cursor - 1);
+                }
+            }
+            else if (keyboard_triggered(SCANCODE_RIGHT))
+            {
+                script_state.editor.collapse(cursor + 1);
+            }
+            else if (keyboard_pressed(SCANCODE_A))
+            {
+                if (!keyboard_alt() && !keyboard_shift() && keyboard_ctrl())
+                {
+                    script_state.editor.select_all();
+                }
+            }
+            else if (keyboard_pressed(SCANCODE_Z))
+            {
+                if (!keyboard_alt() && !keyboard_shift() && keyboard_ctrl())
+                {
+                    script_state.editor.undo();
+                }
+            }
+            else if (keyboard_pressed(SCANCODE_R))
+            {
+                if (!keyboard_alt() && !keyboard_shift() && keyboard_ctrl())
+                {
+                    script_state.editor.redo();
+                }
+            }
+            else if (keyboard_pressed(SCANCODE_TAB))
+            {
+                if (!keyboard_alt() && !keyboard_shift() && !keyboard_ctrl())
+                {
+                    script_state.editor.insert("\t");
+                }
+            }
+            else
+            {
+                auto_scroll = false;
+            }
+        }
+
+        // if (mouse_inside(8, 11, 120, 117))
+        // {
+        //     const auto innerX = (mouse_x() - 8) / 4;
+        //     const auto innerY = (mouse_y() - 11) / 8;
+        //     const auto pos = Coord(
+        //         innerY + state.edit_x,
+        //         innerX + state.edit_y);
+
+        //     if (mouse_pressed(1))
+        //     {
+        //         state.editor.setCursor(pos);
+        //         state.editor.setAncher(pos);
+        //     }
+        //     else if (mouse_down(1))
+        //     {
+        //         state.editor.setAncher(pos);
+        //     }
+
+        //     const auto lineCount = static_cast<int>(state.editor.lineCount());
+        //     if (mouse_z() > 0)
+        //     {
+        //         state.edit_y = std::max(state.edit_y - 1, 0);
+        //     }
+        //     if (mouse_z() < 0 && lineCount > 13)
+        //     {
+        //         state.edit_y = std::min(state.edit_y + 1, lineCount - 14);
+        //     }
+        // }
+
+        // if (autoScroll)
+        // {
+        //     const auto cursor = state.editor.cursor();
+        //     const auto deltaX = cursor.column - state.edit_x;
+        //     const auto deltaY = cursor.line - state.edit_y;
+        //     if (deltaY > 13)
+        //     {
+        //         state.edit_y = cursor.line - 13;
+        //     }
+        //     else if (deltaY < 0)
+        //     {
+        //         state.edit_y = cursor.line;
+        //     }
+
+        //     if (deltaX > 29)
+        //     {
+        //         state.edit_x = cursor.column - 29;
+        //     }
+        //     else if (deltaX < 0)
+        //     {
+        //         state.edit_x = cursor.column;
+        //     }
+        // }
+    }
+
     void editor_update()
     {
         if (keyboard_pressed(41))
         {
-            signal_push(SIGNAL_SWAP_CONSOLE);
+            ctx_signals().push({SIGNAL_SWAP_CONSOLE});
             return;
         }
         editor_update_tab();
         if (page == EditorPage::Script)
         {
+            editor_update_script_edit();
         }
         if (page == EditorPage::Sprite)
         {
@@ -606,6 +985,7 @@ namespace t8::scene
         }
         if (page == EditorPage::Map)
         {
+            editor_update_map_edit();
         }
     }
 
@@ -616,6 +996,7 @@ namespace t8::scene
 
         if (page == EditorPage::Script)
         {
+            editor_draw_script_edit();
         }
         if (page == EditorPage::Sprite)
         {
@@ -623,6 +1004,7 @@ namespace t8::scene
         }
         if (page == EditorPage::Map)
         {
+            editor_draw_map_edit();
         }
     }
 
@@ -630,11 +1012,13 @@ namespace t8::scene
     {
         painter_reset();
 
-        script_state.editor.reset(get_script());
+        script_state.editor.reset("function init()\n\t123");
+        script_state.editor.set_cursor(1);
+        // script_state.editor.reset(get_script());
 
         if (page == EditorPage::Script)
         {
-            signal_push(SIGNAL_START_INPUT);
+            ctx_signals().push({SIGNAL_START_INPUT});
         }
 
         timer_reset();
@@ -642,8 +1026,7 @@ namespace t8::scene
 
     void editor_leave()
     {
-        set_script(script_state.editor.to_string());
-        signal_push(SIGNAL_STOP_INPUT);
+        ctx_script() = script_state.editor.to_string();
+        ctx_signals().push({SIGNAL_STOP_INPUT});
     }
-
 }
