@@ -12,9 +12,7 @@ namespace t8::text_editor
 
         std::vector<char> _buffer;
         size_t _gap_start, _gap_end;
-
-        std::vector<size_t> line_starts{0};
-
+        
     private:
         void ensure_gap(size_t size)
         {
@@ -47,17 +45,6 @@ namespace t8::text_editor
 
             _buffer.resize(text.size() + BASE_SIZE);
             std::copy(text.begin(), text.end(), _buffer.begin() + BASE_SIZE);
-
-            line_starts.clear();
-            line_starts.push_back(0);
-
-            for (auto i = 0; i < text.size(); i += 1)
-            {
-                if (text[i] == '\n')
-                {
-                    line_starts.push_back(i + 1);
-                }
-            }
         }
 
         bool empty() const
