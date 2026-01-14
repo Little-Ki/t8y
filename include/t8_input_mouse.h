@@ -4,11 +4,11 @@
 namespace t8::input {
     void mouse_flush();
 
-    void mouse_move(uint8_t x, uint8_t y);
+    void mouse_move(int16_t x, int16_t y);
 
     void mouse_button(uint8_t btn, bool down);
 
-    void mouse_wheel(int8_t z);
+    void mouse_wheel(int16_t z);
 
     bool mouse_pressed(uint8_t btn);
 
@@ -22,15 +22,15 @@ namespace t8::input {
 
     bool mouse_down(uint8_t btn);
 
-    const int8_t &mouse_dx();
+    const int16_t &mouse_dx();
     
-    const int8_t &mouse_dy();
+    const int16_t &mouse_dy();
 
-    const uint8_t &mouse_x();
+    const int16_t &mouse_x();
 
-    const uint8_t &mouse_y();
+    const int16_t &mouse_y();
 
-    const int8_t &mouse_z();
+    const int16_t &mouse_z();
 
     const uint8_t &mouse_button();
 }

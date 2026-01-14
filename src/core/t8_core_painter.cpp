@@ -169,12 +169,12 @@ namespace t8::core {
     }
 
     void painter_char(uint8_t n, int x, int y, uint8_t color, bool custom) {
-        auto baseX = (n & 0xF) << 3;
-        auto baseY = (n >> 4) << 3;
+        auto sprite_x = (n & 0xF) << 3;
+        auto sprite_y = (n >> 4) << 3;
 
         for (auto dy = 0; dy < 8; dy++) {
             for (auto dx = 0; dx < 8; dx++) {
-                bool c = painter_font(baseX + dx, baseY + dy, custom);
+                bool c = painter_font(sprite_x + dx, sprite_y + dy, custom);
                 if (c)
                     painter_pixel(x + dx, y + dy, color);
             }

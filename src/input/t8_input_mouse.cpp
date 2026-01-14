@@ -3,12 +3,12 @@
 namespace t8::input {
 
     struct MouseState {
-        uint8_t x{0}, y{0};
-        int8_t z{0};
+        int16_t x{0}, y{0};
+        int16_t z{0};
         uint8_t button{0};
         uint8_t pressed{0};
         uint8_t released{0};
-        int8_t dx{0}, dy{0};
+        int16_t dx{0}, dy{0};
     };
 
     struct MouseObserver {
@@ -34,7 +34,7 @@ namespace t8::input {
             o.index = 0;
     }
 
-    void mouse_move(uint8_t x, uint8_t y) {
+    void mouse_move(int16_t x, int16_t y) {
         state.dx = x - state.x;
         state.dy = y - state.y;
         state.x = x;
@@ -51,7 +51,7 @@ namespace t8::input {
         }
     }
 
-    void mouse_wheel(int8_t z) {
+    void mouse_wheel(int16_t z) {
         state.z = z;
     }
 
@@ -108,23 +108,23 @@ namespace t8::input {
         return state.button & (1 << (btn - 1));
     }
 
-    const int8_t &mouse_dx() {
+    const int16_t &mouse_dx() {
         return state.dx;
     }
 
-    const int8_t &mouse_dy() {
+    const int16_t &mouse_dy() {
         return state.dy;
     }
 
-    const uint8_t &mouse_x() {
+    const int16_t &mouse_x() {
         return state.x;
     }
 
-    const uint8_t &mouse_y() {
+    const int16_t &mouse_y() {
         return state.y;
     }
 
-    const int8_t &mouse_z() {
+    const int16_t &mouse_z() {
         return state.z;
     }
 
