@@ -12,6 +12,10 @@ using namespace t8::core;
 using namespace t8::utils;
 
 namespace t8::scene {
+    struct ExecutorState {
+        uint8_t select;
+        bool paused{false};
+    };
 
     ExecutorState state;
 

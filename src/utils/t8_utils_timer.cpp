@@ -5,7 +5,7 @@ namespace t8::utils {
     std::chrono::time_point<std::chrono::steady_clock> referece_time = std::chrono::steady_clock::now();
     uint64_t tick_passed;
 
-    int timer_ticks() {
+    uint64_t timer_ticks() {
         const auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(
                                std::chrono::steady_clock::now() - referece_time)
                                .count();
@@ -14,11 +14,11 @@ namespace t8::utils {
         return ticks;
     }
 
-    int timer_steps() {
+    uint64_t timer_steps() {
         return timer_ticks() - tick_passed;
     }
 
-    void timer_consume(int ticks) {
+    void timer_consume(uint64_t ticks) {
         tick_passed += ticks;
     }
 

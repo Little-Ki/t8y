@@ -30,14 +30,22 @@ namespace t8::scene {
         bool use = false;
     };
 
-    bool first_time = true;
-    ConsoleHistory history;
-    std::vector<ConsoleRecord> records;
-    std::string input;
-    size_t cursor = 0;
+    struct ConsoleState {
+        std::vector<std::string> history;
+        size_t history_index = 0;
+        bool use_history = false;
+
+        std::vector<ConsoleRecord> records;
+        std::string input;
+        size_t cursor = 0;
+
+        bool first_time = true;
+    };
+
+    static ConsoleState state;
 
     void console_sanitize_cursor() {
-        cursor = std::clamp(cursor, 0ULL, input.size());
+        state.cursor = std::clamp(state.cursor, 0ULL, state.input.size());
     }
 
     int console_measure_height(const size_t indent, const std::string &text) {
@@ -58,22 +66,22 @@ namespace t8::scene {
     }
 
     void console_print(const std::string &text, bool prefix = false, uint8_t color = 1) {
-        if (records.empty()) {
-            records.push_back({0,
-                               console_measure_height(prefix ? 8 : 0, text),
-                               prefix, color, text});
+        if (state.records.empty()) {
+            state.records.push_back({0,
+                                     console_measure_height(prefix ? 8 : 0, text),
+                                     prefix, color, text});
         } else {
-            const auto &record = records.back();
+            const auto &record = state.records.back();
             int front_height = record.front_height + record.height;
 
-            records.push_back({front_height,
-                               console_measure_height(prefix ? 8 : 0, text),
-                               prefix, color, text});
+            state.records.push_back({front_height,
+                                     console_measure_height(prefix ? 8 : 0, text),
+                                     prefix, color, text});
         }
     }
 
     void console_reset() {
-        records.clear();
+        state.records.clear();
 
         console_print("T8Y FANTASTIC CONSOLE", false, 3);
         console_print("");
@@ -94,10 +102,10 @@ namespace t8::scene {
     }
 
     bool console_command() {
-        if (input.empty())
+        if (state.input.empty())
             return false;
 
-        auto payload = str_explode(input, ' ');
+        auto payload = str_explode(state.input, ' ');
 
         for (auto &str : payload) {
             str_ltrim(str);
@@ -159,79 +167,79 @@ namespace t8::scene {
             ctx_inputs().pop();
 
             for (const auto &ch : text)
-                if (!(ch & 0x80) && input.size() < 64) {
-                    input.insert(std::next(input.begin(), cursor), ch);
-                    cursor++;
+                if (!(ch & 0x80) && state.input.size() < 64) {
+                    state.input.insert(std::next(state.input.begin(), state.cursor), ch);
+                    state.cursor++;
                 }
             console_sanitize_cursor();
-            history.use = false;
+            state.use_history = false;
             return;
         }
 
         if (keyboard_pressed(SCANCODE_RETURN) ||
             keyboard_pressed(SCANCODE_ENTER)) {
-            console_print(input, true, 1);
+            console_print(state.input, true, 1);
             if (console_command())
-                if (history.texts.empty() || history.texts.back() != input) {
-                    history.texts.push_back(input);
+                if (state.history.empty() || state.history.back() != state.input) {
+                    state.history.push_back(state.input);
                 }
-            history.use = false;
-            input.clear();
+            state.use_history = false;
+            state.input.clear();
             console_sanitize_cursor();
             return;
         }
 
         if (keyboard_triggered(SCANCODE_BACKSPACE)) {
-            if (!input.empty() && cursor > 0) {
-                input.erase(std::next(input.begin(), cursor - 1));
-                cursor--;
+            if (!state.input.empty() && state.cursor > 0) {
+                state.input.erase(std::next(state.input.begin(), state.cursor - 1));
+                state.cursor--;
             }
             return;
         }
         if (keyboard_triggered(SCANCODE_DELETE)) {
-            if (!input.empty() && cursor < input.size()) {
-                input.erase(std::next(input.begin(), cursor));
+            if (!state.input.empty() && state.cursor < state.input.size()) {
+                state.input.erase(std::next(state.input.begin(), state.cursor));
             }
             return;
         }
 
         if (keyboard_triggered(SCANCODE_LEFT)) {
-            if (cursor > 0)
-                cursor -= 1;
+            if (state.cursor > 0)
+                state.cursor -= 1;
             console_sanitize_cursor();
             return;
         }
 
         if (keyboard_triggered(SCANCODE_RIGHT)) {
-            cursor += 1;
+            state.cursor += 1;
             console_sanitize_cursor();
             return;
         }
 
         if (keyboard_triggered(SCANCODE_UP)) {
-            if (!history.use) {
-                history.index = history.texts.size() - 1;
-                history.use = true;
-            } else if (history.index > 0) {
-                history.index = std::clamp(history.index - 1, 0ULL, history.texts.size() - 1);
+            if (!state.use_history) {
+                state.history_index = state.history.size() - 1;
+                state.use_history = true;
+            } else if (state.history_index > 0) {
+                state.history_index = std::clamp(state.history_index - 1, 0ULL, state.history.size() - 1);
             }
 
-            input = history.texts[history.index];
-            cursor = input.size();
+            state.input = state.history[state.history_index];
+            state.cursor = state.input.size();
             return;
         }
 
         if (keyboard_triggered(SCANCODE_DOWN)) {
-            if (history.use) {
-                history.index = std::clamp(history.index + 1, 0ULL, history.texts.size());
-                if (history.index == history.texts.size()) {
-                    input.clear();
+            if (state.use_history) {
+                state.history_index = std::clamp(state.history_index + 1, 0ULL, state.history.size());
+                if (state.history_index == state.history.size()) {
+                    state.input.clear();
                 } else {
-                    input = history.texts[history.index];
-                    cursor = input.size();
+                    state.input = state.history[state.history_index];
+                    state.cursor = state.input.size();
                 }
             } else {
-                input.clear();
+                state.input.clear();
             }
 
             console_sanitize_cursor();
@@ -242,29 +250,29 @@ namespace t8::scene {
     void console_draw() {
         painter_clear(0);
 
-        auto frontHeight = 0;
-        auto inputHeight = console_measure_height(8, input);
+        auto front_height = 0;
+        auto input_height = console_measure_height(8, state.input);
 
-        if (records.size() > 0) {
-            const auto record = records.back();
-            frontHeight = record.front_height + record.height;
+        if (state.records.size() > 0) {
+            const auto record = state.records.back();
+            front_height = record.front_height + record.height;
         }
 
         auto start = std::lower_bound(
-            records.begin(),
-            records.end(),
-            std::max(0, frontHeight - 128),
+            state.records.begin(),
+            state.records.end(),
+            std::max(0, front_height - 128),
             [](const ConsoleRecord &r, int value) {
                 return r.front_height < value;
             });
 
-        auto x = 0, y = std::min(0, 128 - frontHeight - inputHeight);
+        auto x = 0, y = std::min(0, 128 - front_height - input_height);
 
-        if (start != records.end()) {
+        if (start != state.records.end()) {
             y += start->front_height;
         }
 
-        for (auto it = start; it != records.end(); it += 1) {
+        for (auto it = start; it != state.records.end(); it += 1) {
             if (it->prefix) {
                 painter_char('>', 0, y, it->color);
                 x = 8;
@@ -287,14 +295,14 @@ namespace t8::scene {
         painter_char('>', 0, y);
         x = 8;
 
-        for (auto i = 0ULL; i <= input.size(); i++) {
-            if (cursor == i) {
+        for (auto i = 0ULL; i <= state.input.size(); i++) {
+            if (state.cursor == i) {
                 if ((timer_ticks() >> 5) % 2) {
                     painter_rect(x, y, 1, 8, 3);
                 }
             }
-            if (i < input.size()) {
-                painter_char(input[i], x, y);
+            if (i < state.input.size()) {
+                painter_char(state.input[i], x, y);
                 x += 4;
                 if (x > 120) {
                     x = 8;
@@ -308,8 +316,8 @@ namespace t8::scene {
         ctx_signals().push({SIGNAL_START_INPUT});
         painter_reset();
 
-        if (first_time) {
-            first_time = false;
+        if (state.first_time) {
+            state.first_time = false;
             console_reset();
         }
 

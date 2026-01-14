@@ -2,11 +2,11 @@
 #include <chrono>
 
 namespace t8::utils {
-    int timer_ticks();
+    uint64_t timer_ticks();
 
-    int timer_steps();
+    uint64_t timer_steps();
 
-    void timer_consume(int ticks);
+    void timer_consume(uint64_t ticks);
 
     void timer_reset();
 }
