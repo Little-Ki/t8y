@@ -99,8 +99,8 @@ namespace t8::core {
         if (event.type == SDL_EVENT_MOUSE_MOTION) {
             const auto &i = event.motion;
             mouse_move(
-                static_cast<uint8_t>(i.x / 4),
-                static_cast<uint8_t>(i.y / 4));
+                static_cast<int16_t>(i.x / 4),
+                static_cast<int16_t>(i.y / 4));
         }
 
         if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
@@ -229,7 +229,8 @@ namespace t8::core {
             for (auto y = 0; y < 128; y++) {
                 for (auto x = 0; x < 128; x++) {
                     auto n = painter_pixel(x, y);
-                    auto color = memory()->palette[n & 0xF];
+                    n = painter_palette(n);
+                    auto color = memory()->palette[n];
                     buffer[y * 128 + x] = color;
                 }
             }

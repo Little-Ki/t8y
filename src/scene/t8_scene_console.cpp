@@ -290,7 +290,7 @@ namespace t8::scene {
         for (auto i = 0ULL; i <= input.size(); i++) {
             if (cursor == i) {
                 if ((timer_ticks() >> 5) % 2) {
-                    painter_rect(x, y, 1, 7, 3);
+                    painter_rect(x, y, 1, 8, 3);
                 }
             }
             if (i < input.size()) {
