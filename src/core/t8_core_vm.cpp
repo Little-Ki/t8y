@@ -59,12 +59,12 @@ namespace t8::core {
 
     int vm_call_palt(const VMCall &call) {
         if (call.is<int, bool>()) {
-            painter_opacity(
+            painter_palette_mask(
                 call.get<int>(1),
                 call.get<bool>(2));
         }
         if (call.is<uint16_t>()) {
-            painter_opacity(
+            painter_palette_mask(
                 call.get<uint16_t>(1));
         }
         return 0;

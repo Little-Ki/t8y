@@ -11,9 +11,9 @@ namespace t8::core {
 
     void painter_clear(uint8_t c);
 
-    void painter_opacity(uint8_t color, bool t);
+    void painter_palette_mask(uint8_t color, bool t);
 
-    void painter_opacity(uint16_t t = 1);
+    void painter_palette_mask(uint16_t t = 1);
 
     void painter_reset_palette();
 

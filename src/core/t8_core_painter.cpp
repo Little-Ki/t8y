@@ -44,7 +44,7 @@ namespace t8::core {
         std::fill(memory()->screen, memory()->screen + sizeof(memory()->screen), c);
     }
 
-    void painter_opacity(uint8_t color, bool t) {
+    void painter_palette_mask(uint8_t color, bool t) {
         if (t) {
             memory()->palette_mask |= (1 < color);
         } else {
@@ -52,7 +52,7 @@ namespace t8::core {
         }
     }
 
-    void painter_opacity(uint16_t t) {
+    void painter_palette_mask(uint16_t t) {
         memory()->palette_mask = t;
     }
 

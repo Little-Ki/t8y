@@ -76,12 +76,12 @@ namespace t8::scene {
 
     void executor_enter() {
         if (!vm_initialize(context()->script)) {
-            context()->signals.push({SIGNAL_EXCEPTION, vm_error()});
+            ctx_signals().push({SIGNAL_EXCEPTION, vm_error()});
             return;
         }
 
         if (!vm_execute("init")) {
-            context()->signals.push({SIGNAL_EXCEPTION, vm_error()});
+            ctx_signals().push({SIGNAL_EXCEPTION, vm_error()});
             return;
         };
 

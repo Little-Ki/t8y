@@ -15,7 +15,7 @@ namespace t8 {
     constexpr uint32_t SIGNAL_START_INPUT = 3;
     constexpr uint32_t SIGNAL_STOP_INPUT = 4;
     constexpr uint32_t SIGNAL_PRINT = 5;
-    constexpr uint32_t SIGNAL_EXCEPTION = 5;
+    constexpr uint32_t SIGNAL_EXCEPTION = 6;
 
     constexpr auto SCANCODE_ESC = SDL_SCANCODE_ESCAPE;
     constexpr auto SCANCODE_LEFT = SDL_SCANCODE_LEFT;
