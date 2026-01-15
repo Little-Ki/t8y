@@ -11,10 +11,9 @@ namespace t8::core {
     }
 
     void swap_memory(bool runtime) {
-        current_memory = runtime ? &runtime_memory : &base_memory;
-
         if (runtime) {
             std::memcpy(&runtime_memory, &base_memory, sizeof(Memory));
         }
+        current_memory = runtime ? &runtime_memory : &base_memory;
     }
 }

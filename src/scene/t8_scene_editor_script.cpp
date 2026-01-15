@@ -131,7 +131,7 @@ namespace t8::scene {
             }
         }
 
-        if (mouse_inside(8, 11, 120, 128) || state.dragging) {
+        if (mouse_inside(0, 11, 128, 128) || state.dragging) {
             const auto local_x = mouse_x() - 8 + state.scroll_x * 4;
             const auto local_y = mouse_y() - 11 + state.scroll_y * 8;
 
@@ -148,26 +148,23 @@ namespace t8::scene {
             const auto max_size = line == state.editor.line_count() - 1 ? line_size : line_size - 1;
 
             auto cursor_index = line_start;
-            auto in_column = false;
             int x = 0;
+            int p = 0;
 
             for (size_t col = 0; col < max_size; col += 1) {
                 const auto ch = state.editor.get_char(line, col);
                 const auto w = ch == '\t' ? 8 : 4;
                 int middle = x + w / 2;
 
-                if (local_x >= x && local_x < x + w / 2) {
+                if (local_x >= p && local_x < middle) {
                     cursor_index = line_start + col;
                 }
 
-                if (local_x >= x + w / 2 && local_x < x + w) {
-                    cursor_index = line_start + col + 1;
-                }
-
+                p = middle;
                 x += w;
             }
 
-            if (local_x > x) {
+            if (local_x >= p) {
                 cursor_index = line_start + max_size;
             }
 
@@ -198,8 +195,8 @@ namespace t8::scene {
                 state.scroll_y = static_cast<int>(line);
             }
 
-            if (delta_x > 28) {
-                state.scroll_x = static_cast<int>(column) - 29;
+            if (delta_x > 27) {
+                state.scroll_x = static_cast<int>(column) - 28;
             } else if (delta_x < 1) {
                 state.scroll_x = static_cast<int>(column);
             }

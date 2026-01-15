@@ -45,8 +45,9 @@ target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_20)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/SDL3 EXCLUDE_FROM_ALL)
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/Lua EXCLUDE_FROM_ALL)
+add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/sol2 EXCLUDE_FROM_ALL)
 
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC SDL3::SDL3 lua_static)
+target_link_libraries(${EXECUTABLE_NAME} PUBLIC SDL3::SDL3 sol2 lua_static)
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES 
     MACOSX_BUNDLE TRUE

@@ -217,15 +217,20 @@ namespace t8::scene {
         }
 
         if (keyboard_triggered(SCANCODE_UP)) {
-            if (!state.use_history) {
+            auto has_history = false;
+            if (!state.use_history && state.history.size() > 0) {
                 state.history_index = state.history.size() - 1;
                 state.use_history = true;
+                has_history = true;
             } else if (state.history_index > 0) {
                 state.history_index = std::clamp(state.history_index - 1, 0ULL, state.history.size() - 1);
+                has_history = true;
             }
 
-            state.input = state.history[state.history_index];
-            state.cursor = state.input.size();
+            if (has_history) {
+                state.input = state.history[state.history_index];
+                state.cursor = state.input.size();
+            }
             return;
         }
 

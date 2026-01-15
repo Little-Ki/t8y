@@ -24,7 +24,7 @@ namespace t8::scene {
         Map
     };
 
-    EditorPage page = EditorPage::Script;
+    static EditorPage page = EditorPage::Script;
 
     void editor_draw_tab() {
         painter_rect(0, 0, 128, 11, 13, true);

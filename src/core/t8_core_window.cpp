@@ -11,7 +11,7 @@ namespace t8::core {
             return true;
         }
 
-        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        if (!SDL_Init(SDL_INIT_VIDEO)) {
             SDL_Log("SDL_Init failed: %s", SDL_GetError());
             return false;
         }
