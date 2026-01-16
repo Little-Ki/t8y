@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace t8::core {
-    bool window_initialize(uint32_t width, uint32_t height, float pixel_size);
+    bool window_initialize(uint32_t width, uint32_t height, uint32_t pixel_size);
 
     void window_quit();
 

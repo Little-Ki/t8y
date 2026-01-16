@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(t8y)
 
@@ -24,14 +24,10 @@ if(CMAKE_SYSTEM_NAME MATCHES Emscripten)
 	set(CMAKE_EXECUTABLE_SUFFIX ".html" CACHE INTERNAL "")
 endif()
 
-add_compile_options(/source-charset:utf-8 /execution-charset:utf-8)
-
-
 include_directories(${PROJECT_SOURCE_DIR}/third_party)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/include/text_editor)
 file(GLOB_RECURSE SRC_LIST ${PROJECT_SOURCE_DIR}/src/*.cpp)
-# aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC_LIST)
 
 target_sources(${EXECUTABLE_NAME} 
 PRIVATE 
@@ -43,8 +39,8 @@ PRIVATE
 
 target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_20)
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/SDL3 EXCLUDE_FROM_ALL)
-add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/Lua EXCLUDE_FROM_ALL)
+add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/sdl3 EXCLUDE_FROM_ALL)
+add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/lua EXCLUDE_FROM_ALL)
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/sol2 EXCLUDE_FROM_ALL)
 
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC SDL3::SDL3 sol2 lua_static)

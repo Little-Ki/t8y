@@ -6,6 +6,7 @@
 #include "t8_input_mouse.h"
 #include "t8_utils_timer.h"
 
+#include <algorithm>
 #include <functional>
 #include <stack>
 

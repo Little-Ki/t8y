@@ -6,7 +6,7 @@ namespace t8::core {
     SDL_Renderer *renderer = nullptr;
     SDL_Texture *texture = nullptr;
 
-    bool window_initialize(uint32_t width, uint32_t height, float pixel_size) {
+    bool window_initialize(uint32_t width, uint32_t height, uint32_t pixel_size) {
         if (window) {
             return true;
         }
