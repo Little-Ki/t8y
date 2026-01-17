@@ -25,6 +25,8 @@ using namespace t8::scene;
 using namespace t8::input;
 
 namespace t8::core {
+    static uint32_t buffer[128 * 128];
+
     void emulator_setup_screen() {
         painter_palette(0, 0, 0, 0, 255);
         painter_palette(1, 250, 250, 250, 255);
@@ -178,7 +180,7 @@ namespace t8::core {
         while (!ctx_signals().empty()) {
             const auto s = ctx_signals().front();
             ctx_signals().pop();
-            
+
             if (s.type == SIGNAL_START_INPUT) {
                 window_input(true);
             }
@@ -215,7 +217,6 @@ namespace t8::core {
             gamepad_flush();
 
             switch (event.type) {
-                break;
             case SDL_EVENT_QUIT:
                 return;
             default:
@@ -224,22 +225,19 @@ namespace t8::core {
 
             scene_update();
             scene_draw();
-            uint32_t buffer[128 * 128];
 
+            auto p = buffer;
             for (auto y = 0; y < 128; y++) {
                 for (auto x = 0; x < 128; x++) {
                     auto n = painter_pixel(x, y);
                     n = painter_palette(n);
-                    auto color = memory()->palette[n];
-                    buffer[y * 128 + x] = color;
+                    *(p++) = memory()->palette[n];
                 }
             }
 
             window_draw(buffer);
 
             emulator_handle_signal();
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(3));
         }
     }
 
