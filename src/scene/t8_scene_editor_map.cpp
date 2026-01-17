@@ -139,15 +139,15 @@ namespace t8::scene {
             for (auto y = t; y < b; y++) {
                 for (auto x = l; x < r; x++) {
                     auto id = painter_map(x, y);
-                    auto spX = (id & 0xF) << 3;
-                    auto spY = ((id >> 4) & 0xF) << 3;
+                    auto sp_x = (id & 0xF) << 3;
+                    auto sp_y = ((id >> 4) & 0xF) << 3;
 
-                    for (auto inY = 0; inY < chunk_size; inY++) {
-                        for (auto inX = 0; inX < chunk_size; inX++) {
-                            auto color = id == 0 ? 0 : painter_sprite(spX + inX * step, spY + inY * step);
+                    for (auto dy = 0; dy < chunk_size; dy++) {
+                        for (auto dx = 0; dx < chunk_size; dx++) {
+                            auto color = id == 0 ? 0 : painter_sprite(sp_x + dx * step, sp_y + dy * step);
                             painter_pixel(
-                                state.x + x * chunk_size + inX,
-                                state.y + y * chunk_size + inY,
+                                state.x + x * chunk_size + dx,
+                                state.y + y * chunk_size + dy,
                                 color);
                         }
                     }

@@ -3,7 +3,6 @@
 #include <vector>
 
 namespace t8::utils {
-
     void str_ltrim(std::string &s);
 
     void str_rtrim(std::string &s);

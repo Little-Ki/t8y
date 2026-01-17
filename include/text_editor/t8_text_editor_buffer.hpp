@@ -12,7 +12,7 @@ namespace t8::text_editor
 
         std::vector<char> _buffer;
         size_t _gap_start, _gap_end;
-        
+
     private:
         void ensure_gap(size_t size)
         {
@@ -25,7 +25,10 @@ namespace t8::text_editor
             const auto buffer_size = _buffer.size() + expand_size;
 
             _buffer.resize(buffer_size);
-            std::memmove(&_buffer[_gap_end + expand_size], &_buffer[_gap_end], move_size);
+            if (move_size > 0)
+            {
+                std::memmove(&_buffer[_gap_end + expand_size], &_buffer[_gap_end], move_size);
+            }
             _gap_end += expand_size;
         }
 
@@ -117,7 +120,7 @@ namespace t8::text_editor
             assert(i < size());
             return i < _gap_start ? _buffer[i] : _buffer[i + gap_size()];
         }
-        
+
         std::vector<char> to_buffer() const
         {
             std::vector<char> result;
