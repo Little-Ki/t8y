@@ -3,7 +3,7 @@
 #include "t8_core_memory.h"
 #include "t8_font.h"
 #include "t8_input_gamepad.h"
-#include "t8_input_keyboard.h"
+#include "t8_input_keybd.h"
 #include "t8_input_mouse.h"
 
 #include "t8_core_painter.h"
@@ -128,7 +128,7 @@ namespace t8::core {
             if (i.scancode > 255)
                 return;
 
-            keyboard_button(i.scancode, i.mod, i.repeat, event.type == SDL_EVENT_KEY_DOWN);
+            keybd_button(i.scancode, i.mod, i.repeat, event.type == SDL_EVENT_KEY_DOWN);
         }
     }
 
@@ -212,15 +212,11 @@ namespace t8::core {
 
         while (true) {
             window_event(event);
-            mouse_flush();
-            keyboard_flush();
-            gamepad_flush();
 
-            switch (event.type) {
-            case SDL_EVENT_QUIT:
-                return;
-            default:
+            if (event.type != SDL_EVENT_QUIT) {
                 emulator_handle_event(event);
+            } else {
+                return;
             }
 
             scene_update();

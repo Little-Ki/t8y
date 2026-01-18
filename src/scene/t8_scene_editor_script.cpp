@@ -2,7 +2,7 @@
 #include "t8_constants.h"
 #include "t8_core_context.h"
 #include "t8_core_painter.h"
-#include "t8_input_keyboard.h"
+#include "t8_input_keybd.h"
 #include "t8_input_mouse.h"
 #include "t8_utils_timer.h"
 
@@ -83,47 +83,47 @@ namespace t8::scene {
 
             state.editor.insert(text);
         } else {
-            if (keyboard_triggered(SCANCODE_ENTER) ||
-                keyboard_triggered(SCANCODE_RETURN)) {
+            if (keybd_triggered(SCANCODE_ENTER) ||
+                keybd_triggered(SCANCODE_RETURN)) {
                 state.editor.insert('\n');
-            } else if (keyboard_triggered(SCANCODE_BACKSPACE)) {
+            } else if (keybd_triggered(SCANCODE_BACKSPACE)) {
                 state.editor.erase_before();
-            } else if (keyboard_triggered(SCANCODE_DELETE)) {
+            } else if (keybd_triggered(SCANCODE_DELETE)) {
                 state.editor.erase_after();
-            } else if (keyboard_triggered(SCANCODE_UP)) {
+            } else if (keybd_triggered(SCANCODE_UP)) {
                 const auto cursor = state.editor.cursor();
                 const auto line = state.editor.line_index(cursor);
                 if (line > 0) {
                     const auto col = editor_script_edit_visual_column(line, cursor);
                     editor_script_edit_cursor_lifting(line - 1, col);
                 }
-            } else if (keyboard_triggered(SCANCODE_DOWN)) {
+            } else if (keybd_triggered(SCANCODE_DOWN)) {
                 const auto cursor = state.editor.cursor();
                 const auto line = state.editor.line_index(cursor);
                 if (line < state.editor.line_count() - 1) {
                     const auto col = editor_script_edit_visual_column(line, cursor);
                     editor_script_edit_cursor_lifting(line + 1, col);
                 }
-            } else if (keyboard_triggered(SCANCODE_LEFT)) {
+            } else if (keybd_triggered(SCANCODE_LEFT)) {
                 if (cursor > 0) {
                     state.editor.collapse(cursor - 1);
                 }
-            } else if (keyboard_triggered(SCANCODE_RIGHT)) {
+            } else if (keybd_triggered(SCANCODE_RIGHT)) {
                 state.editor.collapse(cursor + 1);
-            } else if (keyboard_pressed(SCANCODE_A)) {
-                if (!keyboard_alt() && !keyboard_shift() && keyboard_ctrl()) {
+            } else if (keybd_pressed(SCANCODE_A)) {
+                if (!keybd_alt() && !keybd_shift() && keybd_ctrl()) {
                     state.editor.select_all();
                 }
-            } else if (keyboard_pressed(SCANCODE_Z)) {
-                if (!keyboard_alt() && !keyboard_shift() && keyboard_ctrl()) {
+            } else if (keybd_pressed(SCANCODE_Z)) {
+                if (!keybd_alt() && !keybd_shift() && keybd_ctrl()) {
                     state.editor.undo();
                 }
-            } else if (keyboard_pressed(SCANCODE_Y)) {
-                if (!keyboard_alt() && !keyboard_shift() && keyboard_ctrl()) {
+            } else if (keybd_pressed(SCANCODE_Y)) {
+                if (!keybd_alt() && !keybd_shift() && keybd_ctrl()) {
                     state.editor.redo();
                 }
-            } else if (keyboard_pressed(SCANCODE_TAB)) {
-                if (!keyboard_alt() && !keyboard_shift() && !keyboard_ctrl()) {
+            } else if (keybd_pressed(SCANCODE_TAB)) {
+                if (!keybd_alt() && !keybd_shift() && !keybd_ctrl()) {
                     state.editor.insert("\t");
                 }
             } else {

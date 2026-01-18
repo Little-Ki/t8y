@@ -7,7 +7,6 @@ namespace t8::input {
         int16_t z{0};
         uint8_t button{0};
         uint8_t pressed{0};
-        uint8_t released{0};
         int16_t dx{0}, dy{0};
     };
 
@@ -15,23 +14,25 @@ namespace t8::input {
         int index, focus;
     };
 
-    MouseObserver ob[3]{};
+    static MouseObserver ovservers[3]{};
 
-    MouseState state;
+    static MouseState state;
 
-    void mouse_flush() {
+    void mouse_flush(bool clear_pressed) {
         for (auto i = 1; i <= 3; i++)
-            if (!mouse_down(i) && ob[i - 1].focus)
-                ob[i - 1].focus = 0;
+            if (!mouse_down(i) && ovservers[i - 1].focus)
+                ovservers[i - 1].focus = 0;
+
+        for (auto &ob : ovservers)
+            ob.index = 0;
 
         state.dx = 0;
         state.dy = 0;
-        state.pressed = 0;
-        state.released = 0;
         state.z = 0;
 
-        for (auto &o : ob)
-            o.index = 0;
+        if (clear_pressed) {
+            state.pressed = 0;
+        }
     }
 
     void mouse_move(int16_t x, int16_t y) {
@@ -47,7 +48,6 @@ namespace t8::input {
             state.pressed |= (1 << (btn - 1));
         } else {
             state.button &= ~(1 << (btn - 1));
-            state.released |= (1 << (btn - 1));
         }
     }
 
@@ -59,22 +59,18 @@ namespace t8::input {
         return state.pressed & (0x1 << (btn - 1));
     }
 
-    bool mouse_released(uint8_t btn) {
-        return state.released & (0x1 << (btn - 1));
-    }
-
     bool mouse_clicked(int x, int y, int w, int h, uint8_t btn) {
         if (btn & 0b11111100)
             return false;
 
-        auto id = ++ob[btn - 1].index;
+        auto id = ++ovservers[btn - 1].index;
         auto px = state.x, py = state.y;
 
-        if (mouse_pressed(btn) && !ob[btn - 1].focus) {
+        if (mouse_pressed(btn) && !ovservers[btn - 1].focus) {
             if (mouse_inside(x, y, w, h))
-                ob[btn - 1].focus = id;
-        } else if (ob[btn - 1].focus == id && mouse_released(btn)) {
-            ob[btn - 1].focus = 0;
+                ovservers[btn - 1].focus = id;
+        } else if (ovservers[btn - 1].focus == id && !mouse_down(btn)) {
+            ovservers[btn - 1].focus = 0;
             if (mouse_inside(x, y, w, h))
                 return true;
         }
@@ -86,13 +82,13 @@ namespace t8::input {
         if (btn & 0b11111100)
             return false;
 
-        auto id = ++ob[btn - 1].index;
+        auto id = ++ovservers[btn - 1].index;
         auto px = state.x, py = state.y;
 
-        if (mouse_pressed(btn) && !ob[btn - 1].focus) {
+        if (mouse_pressed(btn) && !ovservers[btn - 1].focus) {
             if (mouse_inside(x, y, w, h))
-                ob[btn - 1].focus = id;
-        } else if (ob[btn - 1].focus == id && mouse_down(btn) && mouse_inside(x, y, w, h)) {
+                ovservers[btn - 1].focus = id;
+        } else if (ovservers[btn - 1].focus == id && mouse_down(btn) && mouse_inside(x, y, w, h)) {
             return true;
         }
 

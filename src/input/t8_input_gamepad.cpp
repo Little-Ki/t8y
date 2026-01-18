@@ -17,12 +17,12 @@ namespace t8::input {
                 bool y : 1;
             };
             uint8_t button{0};
-        } p[4], pressed[4];
+        } down[4], pressed[4];
     };
 
-    GamepadState state;
+    static GamepadState state;
 
-    uint32_t mapper[4]{0};
+    static uint32_t mapper[4]{0};
 
     void gamepad_flush() {
         state.pressed[0].button = 0;
@@ -65,10 +65,10 @@ namespace t8::input {
         for (auto i = 0; i < 4; i++) {
             if (mapper[i] == id) {
                 if (down) {
-                    state.p[i].button |= button;
+                    state.down[i].button |= button;
                     state.pressed[i].button |= button;
                 } else {
-                    state.p[i].button &= ~button;
+                    state.down[i].button &= ~button;
                 }
                 break;
             }
@@ -78,7 +78,7 @@ namespace t8::input {
     bool gamepad_down(uint8_t i, uint8_t button) {
         if (i > 3)
             return false;
-        return state.p[i].button & button;
+        return state.down[i].button & button;
     }
 
     bool gamepad_pressed(uint8_t i, uint8_t button) {

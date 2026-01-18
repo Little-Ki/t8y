@@ -2,7 +2,8 @@
 #include "t8_constants.h"
 #include "t8_core_context.h"
 #include "t8_core_painter.h"
-#include "t8_input_keyboard.h"
+#include "t8_input_gamepad.h"
+#include "t8_input_keybd.h"
 #include "t8_input_mouse.h"
 #include "t8_utils_timer.h"
 
@@ -49,20 +50,24 @@ namespace t8::scene {
     }
 
     void editor_update() {
-        if (keyboard_pressed(41)) {
+        if (keybd_pressed(41)) {
             ctx_signals().push({SIGNAL_SWAP_CONSOLE});
-            return;
+        } else {
+            editor_update_tab();
+            if (page == EditorPage::Script) {
+                update_script_editor();
+            }
+            if (page == EditorPage::Sprite) {
+                update_steet_editor();
+            }
+            if (page == EditorPage::Map) {
+                update_map_editor();
+            }
         }
-        editor_update_tab();
-        if (page == EditorPage::Script) {
-            update_script_editor();
-        }
-        if (page == EditorPage::Sprite) {
-            update_steet_editor();
-        }
-        if (page == EditorPage::Map) {
-            update_map_editor();
-        }
+
+        mouse_flush();
+        keybd_flush();
+        gamepad_flush();
     }
 
     void editor_draw() {

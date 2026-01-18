@@ -4,7 +4,7 @@
 #include "t8_core_memory.h"
 #include "t8_core_painter.h"
 #include "t8_input_gamepad.h"
-#include "t8_input_keyboard.h"
+#include "t8_input_keybd.h"
 #include "t8_input_mouse.h"
 
 #include <algorithm>
@@ -144,11 +144,11 @@ namespace t8::scene {
 
         lua.set_function(
             "key",
-            [](uint8_t k) { return keyboard_down(k); });
+            [](uint8_t k) { return keybd_down(k); });
 
         lua.set_function(
             "keyp",
-            [](uint8_t k) { return keyboard_pressed(k); });
+            [](uint8_t k) { return keybd_pressed(k); });
 
         lua.set_function(
             "mouse",
@@ -259,22 +259,24 @@ namespace t8::scene {
     }
 
     void executor_update() {
-        if (keyboard_pressed(41) && !state.paused) {
+        if (keybd_pressed(41) && !state.paused) {
             state.paused = true;
             state.select = 0;
         }
 
         if (state.paused) {
-            if (keyboard_pressed(82) && state.select) {
+            if (keybd_pressed(82) && state.select) {
                 state.select -= 1;
             }
-            if (keyboard_pressed(81)) {
+            if (keybd_pressed(81)) {
                 state.select = std::clamp(state.select + 1, 0, 1);
             }
-            if (keyboard_pressed(40) || keyboard_pressed(88)) {
+            if (keybd_pressed(40) || keybd_pressed(88)) {
                 state.paused = false;
                 if (state.select == 1) {
                     context()->signals.push({SIGNAL_SWAP_CONSOLE});
+                    mouse_flush();
+                    keybd_flush();
                 }
             }
         }
@@ -282,11 +284,18 @@ namespace t8::scene {
         auto steps = timer_steps();
 
         if (!state.paused && steps > 0) {
-            for (auto i = 0; i < std::min(steps, 3ULL); i++) {
-                if (vm->update) {
-                    ASSERT_EXECUTE(vm->update());
+            if (vm->update) {
+                auto r = (vm->update());
+                if (!r.valid()) {
+                    sol::error err = r;
+                    ctx_signals().push({SIGNAL_EXCEPTION, err.what()});
                 }
             }
+            mouse_flush();
+            keybd_flush();
+            gamepad_flush();
+        } else {
+            mouse_flush(false);
         }
 
         timer_consume(steps);
