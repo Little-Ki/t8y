@@ -315,7 +315,7 @@ namespace t8::scene {
     void executor_enter() {
         vm.reset();
         vm.emplace();
-        vm->lua.open_libraries(sol::lib::base, sol::lib::math);
+        vm->lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::table);
         setup_vm_api(vm->lua);
 
         ASSERT_EXECUTE(vm->lua.safe_script(ctx_script(), sol::script_pass_on_error));
