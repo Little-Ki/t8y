@@ -274,31 +274,16 @@ namespace t8::scene {
             if (keybd_pressed(40) || keybd_pressed(88)) {
                 state.paused = false;
                 if (state.select == 1) {
-                    context()->signals.push({SIGNAL_SWAP_CONSOLE});
-                    mouse_flush();
-                    keybd_flush();
+                    ctx_signals().push({SIGNAL_SWAP_CONSOLE});
                 }
             }
         }
 
-        auto steps = timer_steps();
-
-        if (!state.paused && steps > 0) {
+        if (!state.paused) {
             if (vm->update) {
-                auto r = (vm->update());
-                if (!r.valid()) {
-                    sol::error err = r;
-                    ctx_signals().push({SIGNAL_EXCEPTION, err.what()});
-                }
+                ASSERT_EXECUTE(vm->update());
             }
-            mouse_flush();
-            keybd_flush();
-            gamepad_flush();
-        } else {
-            mouse_flush(false);
         }
-
-        timer_consume(steps);
     }
 
     void executor_draw() {

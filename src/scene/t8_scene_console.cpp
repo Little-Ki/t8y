@@ -201,16 +201,14 @@ namespace t8::scene {
         return true;
     }
 
-    void console_update_impl() {
-    }
-
     void console_update() {
         if (keybd_pressed(SCANCODE_ESC)) {
             ctx_signals().push({SIGNAL_SWAP_EDITOR});
+            return;
         }
 
         if (!ctx_inputs().empty()) {
-            const auto text = ctx_inputs().back();
+            const auto text = ctx_inputs().front();
             ctx_inputs().pop();
 
             for (const auto &ch : text)
@@ -218,8 +216,9 @@ namespace t8::scene {
                     state.input.insert(std::next(state.input.begin(), state.cursor), ch);
                     state.cursor++;
                 }
-            console_sanitize_cursor();
             state.use_history = false;
+            console_sanitize_cursor();
+            return;
         }
 
         if (keybd_pressed(SCANCODE_RETURN) ||
@@ -232,6 +231,7 @@ namespace t8::scene {
             state.use_history = false;
             state.input.clear();
             console_sanitize_cursor();
+            return;
         }
 
         if (keybd_triggered(SCANCODE_BACKSPACE)) {
@@ -239,23 +239,26 @@ namespace t8::scene {
                 state.input.erase(std::next(state.input.begin(), state.cursor - 1));
                 state.cursor--;
             }
+            return;
         }
-
         if (keybd_triggered(SCANCODE_DELETE)) {
             if (!state.input.empty() && state.cursor < state.input.size()) {
                 state.input.erase(std::next(state.input.begin(), state.cursor));
             }
+            return;
         }
 
         if (keybd_triggered(SCANCODE_LEFT)) {
             if (state.cursor > 0)
                 state.cursor -= 1;
             console_sanitize_cursor();
+            return;
         }
 
         if (keybd_triggered(SCANCODE_RIGHT)) {
             state.cursor += 1;
             console_sanitize_cursor();
+            return;
         }
 
         if (keybd_triggered(SCANCODE_UP)) {
@@ -273,6 +276,7 @@ namespace t8::scene {
                 state.input = state.history[state.history_index];
                 state.cursor = state.input.size();
             }
+            return;
         }
 
         if (keybd_triggered(SCANCODE_DOWN)) {
@@ -289,11 +293,8 @@ namespace t8::scene {
             }
 
             console_sanitize_cursor();
+            return;
         }
-
-        mouse_flush();
-        keybd_flush();
-        gamepad_flush();
     }
 
     void console_draw() {

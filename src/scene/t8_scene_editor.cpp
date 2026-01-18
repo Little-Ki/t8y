@@ -52,22 +52,18 @@ namespace t8::scene {
     void editor_update() {
         if (keybd_pressed(41)) {
             ctx_signals().push({SIGNAL_SWAP_CONSOLE});
-        } else {
-            editor_update_tab();
-            if (page == EditorPage::Script) {
-                update_script_editor();
-            }
-            if (page == EditorPage::Sprite) {
-                update_steet_editor();
-            }
-            if (page == EditorPage::Map) {
-                update_map_editor();
-            }
+            return;
         }
-
-        mouse_flush();
-        keybd_flush();
-        gamepad_flush();
+        editor_update_tab();
+        if (page == EditorPage::Script) {
+            update_script_editor();
+        }
+        if (page == EditorPage::Sprite) {
+            update_steet_editor();
+        }
+        if (page == EditorPage::Map) {
+            update_map_editor();
+        }
     }
 
     void editor_draw() {

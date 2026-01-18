@@ -73,9 +73,9 @@ namespace t8::scene {
         auto auto_scroll = true;
         auto cursor = state.editor.cursor();
 
-        if (!context()->inputs.empty()) {
-            const auto text = context()->inputs.back();
-            context()->inputs.pop();
+        if (!ctx_inputs().empty()) {
+            const auto text = ctx_inputs().front();
+            ctx_inputs().pop();
 
             for (const auto &ch : text)
                 if (ch & 0x80)

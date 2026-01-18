@@ -18,7 +18,7 @@ namespace t8::input {
 
     static MouseState state;
 
-    void mouse_flush(bool clear_pressed) {
+    void mouse_flush() {
         for (auto i = 1; i <= 3; i++)
             if (!mouse_down(i) && ovservers[i - 1].focus)
                 ovservers[i - 1].focus = 0;
@@ -29,10 +29,7 @@ namespace t8::input {
         state.dx = 0;
         state.dy = 0;
         state.z = 0;
-
-        if (clear_pressed) {
-            state.pressed = 0;
-        }
+        state.pressed = 0;
     }
 
     void mouse_move(int16_t x, int16_t y) {

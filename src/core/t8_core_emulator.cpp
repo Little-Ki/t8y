@@ -15,6 +15,7 @@
 #include "t8_scene_console.h"
 #include "t8_scene_editor.h"
 #include "t8_scene_executor.h"
+#include "t8_utils_timer.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -23,6 +24,7 @@
 
 using namespace t8::scene;
 using namespace t8::input;
+using namespace t8::utils;
 
 namespace t8::core {
     static uint32_t buffer[128 * 128];
@@ -219,7 +221,17 @@ namespace t8::core {
                 return;
             }
 
-            scene_update();
+            auto steps = timer_steps();
+
+            if (steps > 0) {
+                scene_update();
+                mouse_flush();
+                keybd_flush();
+                gamepad_flush();
+            }
+
+            timer_consume(steps);
+
             scene_draw();
 
             auto p = buffer;

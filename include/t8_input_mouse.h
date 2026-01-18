@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 namespace t8::input {
-    void mouse_flush(bool clear_pressed = true);
+    void mouse_flush();
 
     void mouse_move(int16_t x, int16_t y);
 
