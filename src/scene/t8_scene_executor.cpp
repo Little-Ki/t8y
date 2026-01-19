@@ -117,19 +117,19 @@ namespace t8::scene {
             "print",
             [](
                 std::string s, int x, int y,
-                std::optional<int> _w, std::optional<int> _h,
-                std::optional<uint8_t> _c) {
-                const auto w = _w.value_or(4);
-                const auto h = _h.value_or(8);
+                std::optional<uint8_t> _c,
+                std::optional<int> _w0, std::optional<int> _w1) {
+                const auto w0 = _w0.value_or(4);
+                const auto w1 = _w1.value_or(8);
                 const auto c = _c.value_or(1);
                 const auto sx = x;
                 for (auto &ch : s) {
                     if (ch == '\n') {
-                        y += h;
+                        y += 8;
                         x = sx;
                     } else if (ch != '\r') {
                         painter_char(ch, x, y, c, true);
-                        x += w;
+                        x += ch < 0x80 ? w0 : w1;
                     }
                 }
             });
@@ -314,7 +314,7 @@ namespace t8::scene {
 
     void executor_enter() {
         swap_memory(true);
-        
+
         vm.reset();
         vm.emplace();
         vm->lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::table);
