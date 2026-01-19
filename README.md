@@ -1,14 +1,17 @@
 # T8Y Fantastic Console
 
 ## 展览
-![image](https://github.com/user-attachments/assets/af7e9d4f-d3d9-4cb3-bfc9-fdb54ff2e021)
-![image](https://github.com/user-attachments/assets/52ee8220-3d2a-4851-8037-90056d7be9eb)
+<p align="center">
+<img width="28%" alt="preview" src="https://github.com/user-attachments/assets/b554790b-0c79-4056-b931-3c649e963e41" />
+<img width="28%" alt="preview" src="https://github.com/user-attachments/assets/4c66df72-c06d-47b8-a89a-b2e73b3a68c2" />
+<img width="28%" alt="preview" src="https://github.com/user-attachments/assets/c73eaced-b9a1-4523-b3e2-f75ae8811c03" />
+</p>
 
 ## 规格
 ```
 显示    128x128 像素, 固定16色调色板
 输入    8 键 Gamepad / 鼠标 / 键盘
-精灵    128x128 大小图集，包含256个精灵
+精灵    128x128 精灵图+128x128 字体图，各包含256个精灵
 代码    不限定长度的Lua脚本
 地图    128x128 格, 1024x1024 分辨率
 ```
@@ -28,7 +31,7 @@ function update()
 end
 ```
 
-## API
+## API (可能有尚未实装的)
 ### 图像
 
 #### 裁剪
