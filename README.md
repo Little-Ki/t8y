@@ -31,7 +31,7 @@ function update()
 end
 ```
 
-## API
+## API (可能有尚未实装的)
 ### 图像
 
 #### 裁剪
