@@ -3,6 +3,7 @@
 #include "t8_utils_algo.h"
 
 #include <algorithm>
+#include <iostream>
 
 namespace t8::core {
     union bitfield_4 {
@@ -46,7 +47,7 @@ namespace t8::core {
 
     void painter_palette_mask(uint8_t color, bool t) {
         if (t) {
-            memory()->palette_mask |= (1 < color);
+            memory()->palette_mask |= (1 << color);
         } else {
             memory()->palette_mask &= ~static_cast<uint16_t>(1 < color);
         }
@@ -98,7 +99,9 @@ namespace t8::core {
         auto buffer = reinterpret_cast<bitfield_4 *>(memory()->screen);
         auto t = (y * 128 + x);
         auto field = &buffer[t >> 1];
-        (t & 1) ? (field->lo = color) : (field->hi = color);
+        if (!(memory()->palette_mask & (1 << color))) {
+            (t & 1) ? (field->lo = color) : (field->hi = color);
+        }
     }
 
     uint8_t painter_pixel(int x, int y) {

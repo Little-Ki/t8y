@@ -300,6 +300,8 @@ namespace t8::scene {
     void console_draw() {
         painter_clear(0);
 
+        auto &records = state.records;
+
         auto front_height = 0;
         auto input_height = console_measure_height(8, state.input);
 
@@ -308,15 +310,19 @@ namespace t8::scene {
             front_height = record.front_height + record.height;
         }
 
-        auto start = std::lower_bound(
+        auto x = 0, y = std::min(0, 128 - front_height - input_height);
+
+        auto start = std::upper_bound(
             state.records.begin(),
             state.records.end(),
             std::max(0, front_height - 128),
-            [](const ConsoleRecord &r, int value) {
-                return r.front_height < value;
+            [](int value, const ConsoleRecord &r) {
+                return value < r.front_height;
             });
 
-        auto x = 0, y = std::min(0, 128 - front_height - input_height);
+        if (start != state.records.end()) {
+            start -= 1;
+        }
 
         if (start != state.records.end()) {
             y += start->front_height;

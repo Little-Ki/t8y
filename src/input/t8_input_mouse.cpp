@@ -33,8 +33,8 @@ namespace t8::input {
     }
 
     void mouse_move(int16_t x, int16_t y) {
-        state.dx = x - state.x;
-        state.dy = y - state.y;
+        state.dx += x - state.x;
+        state.dy += y - state.y;
         state.x = x;
         state.y = y;
     }

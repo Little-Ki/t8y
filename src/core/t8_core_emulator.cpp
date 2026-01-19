@@ -85,7 +85,7 @@ namespace t8::core {
     }
 
     bool emulator_initialize() {
-        if (!window_initialize(128, 128, 4)) {
+        if (!window_initialize(128, 128, context()->pixel_size)) {
             return false;
         }
 
@@ -103,8 +103,8 @@ namespace t8::core {
         if (event.type == SDL_EVENT_MOUSE_MOTION) {
             const auto &i = event.motion;
             mouse_move(
-                static_cast<int16_t>(i.x / 4),
-                static_cast<int16_t>(i.y / 4));
+                static_cast<int16_t>(i.x / context()->pixel_size),
+                static_cast<int16_t>(i.y / context()->pixel_size));
         }
 
         if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {

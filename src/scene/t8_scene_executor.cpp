@@ -313,6 +313,8 @@ namespace t8::scene {
     }
 
     void executor_enter() {
+        swap_memory(true);
+        
         vm.reset();
         vm.emplace();
         vm->lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::table);
@@ -333,8 +335,6 @@ namespace t8::scene {
         ctx_signals().push({SIGNAL_STOP_INPUT});
 
         timer_reset();
-
-        swap_memory(true);
     }
 
     void executor_leave() {

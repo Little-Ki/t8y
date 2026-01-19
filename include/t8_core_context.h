@@ -19,6 +19,7 @@ namespace t8::core
         std::queue<std::string> inputs;
         std::queue<SignalRecord> signals;
         std::string script;
+        uint32_t pixel_size = 3;
     };
 
     AppContext *context();
