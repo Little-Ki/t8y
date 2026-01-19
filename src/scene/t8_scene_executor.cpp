@@ -59,7 +59,7 @@ namespace t8::scene {
             "palt",
             sol::overload(
                 [](uint8_t c, bool b) { painter_palette_mask(c, b); },
-                [](uint16_t m) { painter_palette_mask(m); }));
+                [](std::optional<uint16_t> m) { painter_palette_mask(m.value_or(0)); }));
 
         lua.set_function(
             "cls",
