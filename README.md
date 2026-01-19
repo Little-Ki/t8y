@@ -1,8 +1,11 @@
 # T8Y Fantastic Console
 
 ## 展览
-![image](https://github.com/user-attachments/assets/af7e9d4f-d3d9-4cb3-bfc9-fdb54ff2e021)
-![image](https://github.com/user-attachments/assets/52ee8220-3d2a-4851-8037-90056d7be9eb)
+<p align="center">
+<img width="289" height="312" alt="QQ20260120-000034" src="https://github.com/user-attachments/assets/b554790b-0c79-4056-b931-3c649e963e41" />
+<img width="289" height="312" alt="QQ20260120-000042" src="https://github.com/user-attachments/assets/4c66df72-c06d-47b8-a89a-b2e73b3a68c2" />
+<img width="289" height="312" alt="QQ20260120-000018" src="https://github.com/user-attachments/assets/c73eaced-b9a1-4523-b3e2-f75ae8811c03" />
+</p>
 
 ## 规格
 ```
