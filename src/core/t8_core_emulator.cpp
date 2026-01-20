@@ -26,10 +26,12 @@ using namespace t8::scene;
 using namespace t8::input;
 using namespace t8::utils;
 
-namespace t8::core {
+namespace t8::core
+{
     static uint32_t buffer[128 * 128];
 
-    void emulator_setup_screen() {
+    void emulator_setup_screen()
+    {
         painter_palette(0, 0, 0, 0, 255);
         painter_palette(1, 250, 250, 250, 255);
         painter_palette(2, 190, 190, 190, 255);
@@ -48,13 +50,17 @@ namespace t8::core {
         painter_palette(15, 50, 60, 90, 255);
     }
 
-    void emulator_setup_fonts() {
+    void emulator_setup_fonts()
+    {
         int w, h, n;
         auto data = stbi_load_from_memory(font_data, sizeof(font_data), &w, &h, &n, 0);
-        for (auto y = 0; y < std::min(128, h); y++) {
-            for (auto x = 0; x < std::min(128, w); x++) {
+        for (auto y = 0; y < std::min(128, h); y++)
+        {
+            for (auto x = 0; x < std::min(128, w); x++)
+            {
                 auto idx = y * w + x;
-                if (data[idx]) {
+                if (data[idx])
+                {
                     painter_font(x, y, true, true);
                     painter_font(x, y, true, false);
                 }
@@ -64,7 +70,8 @@ namespace t8::core {
         stbi_image_free(data);
     }
 
-    void emulator_setup_scene() {
+    void emulator_setup_scene()
+    {
         scene_register(SCENE_ID_CONSOLE, {console_update,
                                           console_draw,
                                           console_enter,
@@ -84,8 +91,10 @@ namespace t8::core {
         scene_swap(SCENE_ID_CONSOLE);
     }
 
-    bool emulator_initialize() {
-        if (!window_initialize(128, 128, context()->pixel_size)) {
+    bool emulator_initialize()
+    {
+        if (!window_initialize(128, 128, context()->pixel_size))
+        {
             return false;
         }
 
@@ -98,34 +107,41 @@ namespace t8::core {
         return true;
     }
 
-    void emulator_handle_mouse(const SDL_Event &event) {
+    void emulator_handle_mouse(const SDL_Event &event)
+    {
 
-        if (event.type == SDL_EVENT_MOUSE_MOTION) {
+        if (event.type == SDL_EVENT_MOUSE_MOTION)
+        {
             const auto &i = event.motion;
             mouse_move(
                 static_cast<int16_t>(i.x / context()->pixel_size),
                 static_cast<int16_t>(i.y / context()->pixel_size));
         }
 
-        if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+        if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+        {
             const auto &i = event.button;
             mouse_button(i.button, true);
         }
 
-        if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+        if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+        {
             const auto &i = event.button;
             mouse_button(i.button, false);
         }
 
-        if (event.type == SDL_EVENT_MOUSE_WHEEL) {
+        if (event.type == SDL_EVENT_MOUSE_WHEEL)
+        {
             const auto &i = event.wheel;
             mouse_wheel(static_cast<int8_t>(i.y));
         }
     }
 
-    void emulator_handle_keybd(const SDL_Event &event) {
+    void emulator_handle_keybd(const SDL_Event &event)
+    {
         if (event.type == SDL_EVENT_KEY_DOWN ||
-            event.type == SDL_EVENT_KEY_UP) {
+            event.type == SDL_EVENT_KEY_UP)
+        {
             const auto &i = event.key;
             if (i.scancode > 255)
                 return;
@@ -134,96 +150,121 @@ namespace t8::core {
         }
     }
 
-    void emulator_handle_gamepad(const SDL_Event &event) {
-        if (event.type == SDL_EVENT_GAMEPAD_ADDED) {
+    void emulator_handle_gamepad(const SDL_Event &event)
+    {
+        if (event.type == SDL_EVENT_GAMEPAD_ADDED)
+        {
             gamepad_join(event.gdevice.which);
         }
 
-        if (event.type == SDL_EVENT_GAMEPAD_REMOVED) {
+        if (event.type == SDL_EVENT_GAMEPAD_REMOVED)
+        {
             gamepad_remove(event.gdevice.which);
         }
 
         if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN ||
-            event.type == SDL_EVENT_GAMEPAD_BUTTON_UP) {
+            event.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
+        {
             const auto &i = event.gbutton;
             gamepad_button(i.which, i.button, event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN);
         }
     }
 
-    void emulator_handle_event(const SDL_Event &event) {
-        switch (event.type) {
+    void emulator_handle_event(const SDL_Event &event)
+    {
+        switch (event.type)
+        {
         case SDL_EVENT_MOUSE_MOTION:
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
         case SDL_EVENT_MOUSE_BUTTON_UP:
-        case SDL_EVENT_MOUSE_WHEEL: {
+        case SDL_EVENT_MOUSE_WHEEL:
+        {
             emulator_handle_mouse(event);
             break;
         }
         case SDL_EVENT_KEY_DOWN:
-        case SDL_EVENT_KEY_UP: {
+        case SDL_EVENT_KEY_UP:
+        {
             emulator_handle_keybd(event);
             break;
         }
-        case SDL_EVENT_TEXT_INPUT: {
+        case SDL_EVENT_TEXT_INPUT:
+        {
             ctx_inputs().push(event.text.text);
             break;
         }
         case SDL_EVENT_GAMEPAD_AXIS_MOTION:
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-        case SDL_EVENT_GAMEPAD_BUTTON_UP: {
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        {
             emulator_handle_gamepad(event);
             break;
         }
         }
     }
 
-    void emulator_handle_signal() {
+    void emulator_handle_signal()
+    {
 
-        while (!ctx_signals().empty()) {
+        while (!ctx_signals().empty())
+        {
             const auto s = ctx_signals().front();
             ctx_signals().pop();
 
-            if (s.type == SIGNAL_START_INPUT) {
+            if (s.type == SIGNAL_START_INPUT)
+            {
                 window_input(true);
             }
-            if (s.type == SIGNAL_STOP_INPUT) {
+            if (s.type == SIGNAL_STOP_INPUT)
+            {
                 window_input(false);
             }
-            if (s.type == SIGNAL_SWAP_EDITOR) {
+            if (s.type == SIGNAL_SWAP_EDITOR)
+            {
                 scene_swap(SCENE_ID_EDITOR);
             }
-            if (s.type == SIGNAL_SWAP_CONSOLE) {
+            if (s.type == SIGNAL_SWAP_CONSOLE)
+            {
                 scene_swap(SCENE_ID_CONSOLE);
             }
-            if (s.type == SIGNAL_SWAP_EXECUTOR) {
+            if (s.type == SIGNAL_SWAP_EXECUTOR)
+            {
                 scene_swap(SCENE_ID_EXECUTOR);
             }
-            if (s.type == SIGNAL_EXCEPTION) {
+            if (s.type == SIGNAL_EXCEPTION)
+            {
                 console_print(std::get<std::string>(s.value), true);
                 scene_swap(SCENE_ID_CONSOLE);
             }
-            if (s.type == SIGNAL_PRINT) {
+            if (s.type == SIGNAL_PRINT)
+            {
                 console_print(std::get<std::string>(s.value), false);
             }
         }
     }
 
-    void emulator_run() {
+    void emulator_run()
+    {
 
         SDL_Event event;
 
-        while (true) {
+        while (true)
+        {
             window_event(event);
 
-            if (event.type != SDL_EVENT_QUIT) {
+            if (event.type != SDL_EVENT_QUIT)
+            {
                 emulator_handle_event(event);
-            } else {
+            }
+            else
+            {
                 return;
             }
 
             auto steps = timer_steps();
 
-            if (steps > 0) {
+            if (steps > 0)
+            {
                 scene_update();
                 mouse_flush();
                 keybd_flush();
@@ -235,8 +276,10 @@ namespace t8::core {
             scene_draw();
 
             auto p = buffer;
-            for (auto y = 0; y < 128; y++) {
-                for (auto x = 0; x < 128; x++) {
+            for (auto y = 0; y < 128; y++)
+            {
+                for (auto x = 0; x < 128; x++)
+                {
                     auto n = painter_pixel(x, y);
                     n = painter_palette(n);
                     *(p++) = memory()->palette[n];
@@ -246,10 +289,12 @@ namespace t8::core {
             window_draw(buffer);
 
             emulator_handle_signal();
+            std::this_thread::sleep_for(std::chrono::milliseconds(3));
         }
     }
 
-    void emulator_quit() {
+    void emulator_quit()
+    {
         window_quit();
     }
 }
