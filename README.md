@@ -2,9 +2,9 @@
 
 ## 展览
 <p align="center">
-<img width="28%" alt="preview" src="https://github.com/user-attachments/assets/b554790b-0c79-4056-b931-3c649e963e41" />
-<img width="28%" alt="preview" src="https://github.com/user-attachments/assets/4c66df72-c06d-47b8-a89a-b2e73b3a68c2" />
-<img width="28%" alt="preview" src="https://github.com/user-attachments/assets/c73eaced-b9a1-4523-b3e2-f75ae8811c03" />
+<img width="28%" alt="preview" src="https://github.com/user-attachments/assets/773c13b4-be09-4998-ae64-88282167bb66" />
+<img width="28%" alt="preview" src="https://github.com/user-attachments/assets/355181c0-c753-4c60-be63-05da6dcef7c4" />
+<img width="28%" alt="preview" src="https://github.com/user-attachments/assets/5d52929e-11ab-48ef-9ffa-814baafe2f6a" />
 </p>
 
 ## 规格
