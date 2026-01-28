@@ -17,9 +17,6 @@
 #include "t8_scene_executor.h"
 #include "t8_utils_timer.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
-
 #include <thread>
 
 using namespace t8::scene;
@@ -30,7 +27,7 @@ namespace t8::core
 {
     static uint32_t buffer[128 * 128];
 
-    void emulator_setup_screen()
+    void emulator_setup_palette()
     {
         painter_palette(0, 0, 0, 0, 255);
         painter_palette(1, 250, 250, 250, 255);
@@ -52,22 +49,8 @@ namespace t8::core
 
     void emulator_setup_fonts()
     {
-        int w, h, n;
-        auto data = stbi_load_from_memory(font_data, sizeof(font_data), &w, &h, &n, 0);
-        for (auto y = 0; y < std::min(128, h); y++)
-        {
-            for (auto x = 0; x < std::min(128, w); x++)
-            {
-                auto idx = y * w + x;
-                if (data[idx])
-                {
-                    painter_font(x, y, true, true);
-                    painter_font(x, y, true, false);
-                }
-            }
-        }
-
-        stbi_image_free(data);
+        std::memcpy(memory()->default_font, font_data, 2048);
+        std::memcpy(memory()->custom_font, font_data, 2048);
     }
 
     void emulator_setup_scene()
@@ -101,7 +84,7 @@ namespace t8::core
         painter_reset();
 
         emulator_setup_scene();
-        emulator_setup_screen();
+        emulator_setup_palette();
         emulator_setup_fonts();
 
         return true;
