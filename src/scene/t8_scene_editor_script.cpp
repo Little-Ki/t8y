@@ -36,7 +36,7 @@ namespace t8::scene
 
         for (size_t col = 0; col < max_column; col += 1)
         {
-            const auto ch = state.editor.get_char(line, col);
+            const auto ch = state.editor.get_char(line_start + col);
             const auto w = ch == '\t' ? 8 : 4;
             result += w;
         }
@@ -56,7 +56,7 @@ namespace t8::scene
 
         for (; col < line_size;)
         {
-            const auto ch = state.editor.get_char(next_line, col);
+            const auto ch = state.editor.get_char(line_start + col);
             const auto w = ch == '\t' ? 8 : 4;
             if (temp >= visual_column)
             {
@@ -209,7 +209,7 @@ namespace t8::scene
 
             for (size_t col = 0; col < max_size; col += 1)
             {
-                const auto ch = state.editor.get_char(line, col);
+                const auto ch = state.editor.get_char(line_start + col);
                 const auto w = ch == '\t' ? 8 : 4;
                 int middle = x + w / 2;
 
@@ -300,7 +300,7 @@ namespace t8::scene
 
             for (auto col = 0; col < line_size; col += 1)
             {
-                const auto ch = state.editor.get_char(line, col);
+                const auto ch = state.editor.get_char(line_start + col);
                 const auto current_index = line_start + col;
                 if ((timer_ticks() >> 5) % 2 && current_index == cursor)
                     painter_rect(x, y, 1, 8, 3, true);
