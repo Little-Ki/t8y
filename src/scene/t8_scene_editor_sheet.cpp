@@ -14,19 +14,23 @@ using namespace t8::core;
 using namespace t8::utils;
 using namespace t8::input;
 
-namespace t8::scene {
-    enum class EditorTool {
+namespace t8::scene
+{
+    enum class EditorTool
+    {
         Pencil,
         Straw,
         Barrel
     };
 
-    struct DrawTarget {
+    struct DrawTarget
+    {
         std::function<void(int, int, uint8_t)> setter;
         std::function<uint8_t(int, int)> getter;
     };
 
-    struct EditorState {
+    struct EditorState
+    {
         EditorTool tool = EditorTool::Pencil;
         uint8_t sprite_id = 0;
         uint8_t color = 1;
@@ -40,38 +44,42 @@ namespace t8::scene {
 
     void editor_spray_sheet(
         int area_x, int area_y, int area_size,
-        int x, int y,
+        int start_x, int start_y,
         uint8_t replace, uint8_t color,
-        const DrawTarget &target) {
-        struct Point {
-            int x, y;
-        };
+        const DrawTarget &target)
+    {
+        int l = std::max(area_x, 0);
+        int t = std::max(area_y, 0);
+        int r = std::min(area_x + area_size, 128);
+        int b = std::min(area_y + area_size, 128);
 
-        std::stack<Point> points;
+        std::stack<std::tuple<int, int>> points;
 
-        points.push({x, y});
+        points.push({start_x, start_y});
 
-        while (!points.empty()) {
+        while (!points.empty())
+        {
             const auto p = points.top();
+            const auto x = std::get<0>(p);
+            const auto y = std::get<1>(p);
+
             points.pop();
 
-            if (p.x < 0 || p.x >= 128 || p.y < 0 || p.y >= 128)
+            if (x < l || x >= r || y < t || y >= b)
                 continue;
 
-            if (p.x < area_x || p.x >= area_x + area_size || p.y < area_y || p.y >= area_y + area_size)
-                continue;
-
-            const auto it = target.getter(p.x, p.y);
+            const auto it = target.getter(x, y);
 
             if (it == color)
                 continue;
 
-            if (it == replace) {
-                target.setter(p.x, p.y, color);
-                points.push({p.x - 1, p.y});
-                points.push({p.x + 1, p.y});
-                points.push({p.x, p.y - 1});
-                points.push({p.x, p.y + 1});
+            if (it == replace)
+            {
+                target.setter(x, y, color);
+                points.push({x - 1, y});
+                points.push({x + 1, y});
+                points.push({x, y - 1});
+                points.push({x, y + 1});
             }
         }
     }
@@ -80,24 +88,30 @@ namespace t8::scene {
         int area_x, int area_y, int area_size,
         int x, int y, int pixel_size,
         uint8_t color,
-        const DrawTarget &target) {
+        const DrawTarget &target)
+    {
         auto l = std::max(x - (pixel_size >> 1), area_x);
         auto t = std::max(y - (pixel_size >> 1), area_y);
-        auto r = std::min(x - (pixel_size >> 1) + pixel_size, area_x + area_size);
-        auto b = std::min(y - (pixel_size >> 1) + pixel_size, area_y + area_size);
+        auto r = std::min(x + (pixel_size >> 1) + 1, area_x + area_size);
+        auto b = std::min(y + (pixel_size >> 1) + 1, area_y + area_size);
 
-        for (auto y = t; y < b; y++) {
-            for (auto x = l; x < r; x++) {
+        for (auto y = t; y < b; y++)
+        {
+            for (auto x = l; x < r; x++)
+            {
                 target.setter(x, y, color);
             }
         }
     }
 
     void editor_erase_sheet(
-        int area_x, int area_y, int size,
-        const DrawTarget &target) {
-        for (auto y = area_y; y < area_y + size; y++) {
-            for (auto x = area_x; x < area_x + size; x++) {
+        int area_x, int area_y, int area_size,
+        const DrawTarget &target)
+    {
+        for (auto y = area_y; y < area_y + area_size; y++)
+        {
+            for (auto x = area_x; x < area_x + area_size; x++)
+            {
                 target.setter(x, y, 0);
             }
         }
@@ -105,19 +119,24 @@ namespace t8::scene {
 
     void editor_rotate_sheet(
         int x, int y, int size,
-        const DrawTarget &target) {
+        const DrawTarget &target)
+    {
         const auto half = size >> 1;
-        const auto next = [&](int &x, int &y) {
+        const auto next = [&](int &x, int &y)
+        {
             auto t = y;
             y = x;
             x = size - t - 1;
         };
 
-        for (auto dy = 0; dy < half; dy++) {
-            for (auto dx = 0; dx < half; dx++) {
+        for (auto dy = 0; dy < half; dy++)
+        {
+            for (auto dx = 0; dx < half; dx++)
+            {
                 auto tx = dx, ty = dy;
                 auto prev = target.getter(x + dx, y + dy);
-                for (auto i = 0; i < 4; i++) {
+                for (auto i = 0; i < 4; i++)
+                {
                     next(tx, ty);
                     auto it = target.getter(x + tx, y + ty);
                     target.setter(x + tx, y + ty, prev);
@@ -130,19 +149,27 @@ namespace t8::scene {
     void editor_flip_sheet(
         int area_x, int area_y, int size,
         bool vertical,
-        const DrawTarget &target) {
-        if (vertical) {
-            for (auto dy = 0; dy < (size >> 1); dy++) {
-                for (auto dx = 0; dx < size; dx++) {
+        const DrawTarget &target)
+    {
+        if (vertical)
+        {
+            for (auto dy = 0; dy < (size >> 1); dy++)
+            {
+                for (auto dx = 0; dx < size; dx++)
+                {
                     auto that = target.getter(area_x + dx, area_y + size - dy - 1);
                     auto it = target.getter(area_x + dx, area_y + dy);
                     target.setter(area_x + dx, area_y + size - dy - 1, it);
                     target.setter(area_x + dx, area_y + dy, that);
                 }
             }
-        } else {
-            for (auto dy = 0; dy < size; dy++) {
-                for (auto dx = 0; dx < (size >> 1); dx++) {
+        }
+        else
+        {
+            for (auto dy = 0; dy < size; dy++)
+            {
+                for (auto dx = 0; dx < (size >> 1); dx++)
+                {
                     auto that = target.getter(area_x + size - dx - 1, area_y + dy);
                     auto it = target.getter(area_x + dx, area_y + dy);
                     target.setter(area_x + size - dx - 1, area_y + dy, it);
@@ -152,7 +179,8 @@ namespace t8::scene {
         }
     }
 
-    void update_steet_editor() {
+    void update_steet_editor()
+    {
         const auto sprite_id = state.sprite_id;
         const auto id_x = (sprite_id & 0xF);
         const auto id_y = (sprite_id >> 4) & 0xF;
@@ -161,60 +189,76 @@ namespace t8::scene {
         const auto area_size = state.zoom << 3;
 
         const DrawTarget draw_font = {
-            [](int x, int y, uint8_t c) { painter_font(x, y, c, true); },
-            [](int x, int y) { return painter_font(x, y, true); }};
+            [](int x, int y, uint8_t c)
+            { painter_font(x, y, c, true); },
+            [](int x, int y)
+            { return painter_font(x, y, true); }};
         const DrawTarget draw_sprite = {
-            [](int x, int y, uint8_t c) { painter_sprite(x, y, c); },
-            [](int x, int y) { return painter_sprite(x, y); }};
+            [](int x, int y, uint8_t c)
+            { painter_sprite(x, y, c); },
+            [](int x, int y)
+            { return painter_sprite(x, y); }};
 
         const DrawTarget draw_target = state.font_mode ? draw_font : draw_sprite;
 
         // 工具操作
         {
-            if (mouse_clicked(8, 86, 7, 7)) {
+            if (mouse_clicked(8, 86, 7, 7))
+            {
                 state.tool = EditorTool::Pencil;
             }
-            if (mouse_clicked(16, 86, 7, 7)) {
+            if (mouse_clicked(16, 86, 7, 7))
+            {
                 state.tool = EditorTool::Straw;
             }
-            if (mouse_clicked(24, 86, 7, 7)) {
+            if (mouse_clicked(24, 86, 7, 7))
+            {
                 state.tool = EditorTool::Barrel;
             }
-            if (mouse_clicked(32, 86, 7, 7)) {
+            if (mouse_clicked(32, 86, 7, 7))
+            {
                 editor_flip_sheet(sprite_x, sprite_y, area_size, false, draw_target);
             }
-            if (mouse_clicked(40, 86, 7, 7)) {
+            if (mouse_clicked(40, 86, 7, 7))
+            {
                 editor_flip_sheet(sprite_x, sprite_y, area_size, true, draw_target);
             }
-            if (mouse_clicked(48, 86, 7, 7)) {
+            if (mouse_clicked(48, 86, 7, 7))
+            {
                 editor_rotate_sheet(sprite_x, sprite_y, area_size, draw_target);
             }
-            if (mouse_clicked(56, 86, 7, 7)) {
+            if (mouse_clicked(56, 86, 7, 7))
+            {
                 editor_erase_sheet(sprite_x, sprite_y, area_size, draw_target);
             }
         }
 
         // 字体模式
-        if (mouse_clicked(85, 86, 7, 7)) {
+        if (mouse_clicked(85, 86, 7, 7))
+        {
             state.font_mode = !state.font_mode;
         }
 
         // 精灵页面
-        for (auto i = 0; i < 4; i++) {
-            if (mouse_clicked(100 + i * 6, 88, 5, 4)) {
+        for (auto i = 0; i < 4; i++)
+        {
+            if (mouse_clicked(100 + i * 6, 88, 5, 4))
+            {
                 state.page = i;
             }
         }
 
         // 调色板
-        if (mouse_dragging(88, 19, 32, 32)) {
+        if (mouse_dragging(88, 19, 32, 32))
+        {
             int x = (mouse_x() - 88) >> 3;
             int y = (mouse_y() - 19) >> 3;
             state.color = (y << 2) | x;
         }
 
         // 选择精灵
-        if (mouse_dragging(0, 96, 128, 32)) {
+        if (mouse_dragging(0, 96, 128, 32))
+        {
             auto local_x = mouse_x();
             auto local_y = mouse_y() - 96;
             local_x >>= 3;
@@ -222,42 +266,59 @@ namespace t8::scene {
             auto next_id = ((local_y << 4) | (local_x & 0xF)) & 0xFF;
             next_id += (state.page << 6);
             state.sprite_id = next_id;
-        } else if (mouse_inside(0, 96, 128, 32)) {
-            if (mouse_z() < 0) {
+        }
+        else if (mouse_inside(0, 96, 128, 32))
+        {
+            if (mouse_z() < 0)
+            {
                 state.page = std::clamp(state.page + 1, 0, 3);
             }
-            if (mouse_z() > 0) {
+            if (mouse_z() > 0)
+            {
                 state.page = std::clamp(state.page - 1, 0, 3);
             }
         }
 
         // 右侧滑块
-        for (auto i = 0; i < 3; i++) {
-            if (mouse_clicked(98 + (i << 3), 59, 5, 5)) {
+        for (auto i = 0; i < 3; i++)
+        {
+            if (mouse_clicked(98 + (i << 3), 59, 5, 5))
+            {
                 state.zoom = (1 << i);
             }
-            if (mouse_clicked(98 + (i << 3), 69, 5, 5)) {
+            if (mouse_clicked(98 + (i << 3), 69, 5, 5))
+            {
                 state.pencil_size = 1 + i * 2;
             }
         }
 
         // 设置精灵Flag
-        if (!state.font_mode) {
+        if (!state.font_mode)
+        {
             auto old = 0;
-            for (auto y = id_y; y < ((id_y + state.zoom) & 0xF); y++) {
-                for (auto x = id_x; x < ((id_x + state.zoom) & 0xF); x++) {
+            for (auto y = id_y; y < ((id_y + state.zoom) & 0xF); y++)
+            {
+                for (auto x = id_x; x < ((id_x + state.zoom) & 0xF); x++)
+                {
                     old |= painter_flags(((y << 4) | x) & 0xFF);
                 }
             }
 
-            for (auto i = 0; i < 8; i++) {
-                if (mouse_clicked(85 + ((i << 2) + i), 81, 4, 4)) {
-                    for (auto y = id_y; y < ((id_y + state.zoom) & 0xF); y++) {
-                        for (auto x = id_x; x < ((id_x + state.zoom) & 0xF); x++) {
+            for (auto i = 0; i < 8; i++)
+            {
+                if (mouse_clicked(85 + ((i << 2) + i), 81, 4, 4))
+                {
+                    for (auto y = id_y; y < ((id_y + state.zoom) & 0xF); y++)
+                    {
+                        for (auto x = id_x; x < ((id_x + state.zoom) & 0xF); x++)
+                        {
                             auto flag = painter_flags(((y << 4) | x) & 0xFF);
-                            if (old & (1 << i)) {
+                            if (old & (1 << i))
+                            {
                                 flag &= ~static_cast<uint8_t>(1 << i);
-                            } else {
+                            }
+                            else
+                            {
                                 flag |= static_cast<uint8_t>(1 << i);
                             }
                             painter_flags(((y << 4) | x) & 0xFF, flag);
@@ -276,15 +337,19 @@ namespace t8::scene {
             local_x /= 8 >> (state.zoom >> 1);
             local_y /= 8 >> (state.zoom >> 1);
 
-            if (state.tool == EditorTool::Straw) {
-                if (mouse_clicked(8, 19, 64, 64)) {
+            if (state.tool == EditorTool::Straw)
+            {
+                if (mouse_clicked(8, 19, 64, 64))
+                {
                     state.color = draw_target.getter(sprite_x + local_x, sprite_y + local_y);
                     state.tool = EditorTool::Pencil;
                 }
             }
 
-            if (state.tool == EditorTool::Barrel) {
-                if (mouse_clicked(8, 19, 64, 64)) {
+            if (state.tool == EditorTool::Barrel)
+            {
+                if (mouse_clicked(8, 19, 64, 64))
+                {
                     auto replace = draw_target.getter(sprite_x + local_x, sprite_y + local_y);
 
                     editor_spray_sheet(
@@ -298,8 +363,10 @@ namespace t8::scene {
                     state.tool = EditorTool::Pencil;
                 }
             }
-            if (state.tool == EditorTool::Pencil) {
-                if (mouse_dragging(8, 19, 64, 64)) {
+            if (state.tool == EditorTool::Pencil)
+            {
+                if (mouse_dragging(8, 19, 64, 64))
+                {
                     editor_draw_sheet_pixel(
                         sprite_x, sprite_y, area_size,
                         sprite_x + local_x, sprite_y + local_y,
@@ -307,18 +374,22 @@ namespace t8::scene {
                         draw_target);
                 }
             }
-            if (mouse_inside(8, 19, 64, 64)) {
-                if (mouse_z() < 0) {
+            if (mouse_inside(8, 19, 64, 64))
+            {
+                if (mouse_z() < 0)
+                {
                     state.zoom = std::clamp(state.zoom << 1, 1, 4);
                 }
-                if (mouse_z() > 0) {
+                if (mouse_z() > 0)
+                {
                     state.zoom = std::clamp(state.zoom >> 1, 1, 4);
                 }
             }
         }
     }
 
-    void draw_sheet_editor() {
+    void draw_sheet_editor()
+    {
         const auto sprite_id = state.sprite_id;
         const auto id_x = (sprite_id & 0xF);
         const auto id_y = (sprite_id >> 4) & 0xF;
@@ -331,8 +402,10 @@ namespace t8::scene {
 
         // 画板
         painter_rect(7, 18, 66, 66, 0);
-        for (auto dy = 0; dy < range; dy++) {
-            for (auto dx = 0; dx < range; dx++) {
+        for (auto dy = 0; dy < range; dy++)
+        {
+            for (auto dx = 0; dx < range; dx++)
+            {
                 auto color = state.font_mode ? painter_font(sprite_x + dx, sprite_y + dy, true) : painter_sprite(sprite_x + dx, sprite_y + dy);
                 painter_rect(8 + dx * pixel_size, 19 + dy * pixel_size, pixel_size, pixel_size, color, true);
             }
@@ -341,7 +414,8 @@ namespace t8::scene {
         //  调色板
         {
             painter_rect(87, 18, 34, 34, 0);
-            for (auto i = 0; i < 16; i++) {
+            for (auto i = 0; i < 16; i++)
+            {
                 int x = i & 0b11;
                 int y = i >> 2;
                 painter_rect(88 + (x << 3), 19 + (y << 3), 8, 8, i, true);
@@ -375,16 +449,21 @@ namespace t8::scene {
         }
 
         // 精灵Flag
-        if (!state.font_mode) {
+        if (!state.font_mode)
+        {
             auto flag = 0;
-            for (auto y = id_y; y < std::min(16, id_y + state.zoom); y++) {
-                for (auto x = id_x; x < std::min(16, id_x + state.zoom); x++) {
+            for (auto y = id_y; y < std::min(16, id_y + state.zoom); y++)
+            {
+                for (auto x = id_x; x < std::min(16, id_x + state.zoom); x++)
+                {
                     flag |= painter_flags(((y << 4) | x) & 0xFF);
                 }
             }
-            for (auto i = 0; i < 8; i++) {
+            for (auto i = 0; i < 8; i++)
+            {
                 painter_rect(85 + ((i << 2) + i), 80, 4, 4, 0, true);
-                if (flag & (1 << i)) {
+                if (flag & (1 << i))
+                {
                     painter_rect(86 + ((i << 2) + i), 81, 2, 2, 3, true);
                 }
             }
@@ -395,14 +474,17 @@ namespace t8::scene {
             painter_rect(100, 61, 17, 1, 13);
             painter_rect(100, 71, 17, 1, 13);
 
-            for (auto i = 0; i < 3; i++) {
+            for (auto i = 0; i < 3; i++)
+            {
                 painter_rect(99 + (i << 3), 60, 3, 3, 0, true);
-                if (state.zoom == (1 << i)) {
+                if (state.zoom == (1 << i))
+                {
                     painter_pixel(100 + (i << 3), 61, 3);
                 }
 
                 painter_rect(99 + (i << 3), 70, 3, 3, 0, true);
-                if (state.pencil_size == 1 + i * 2) {
+                if (state.pencil_size == 1 + i * 2)
+                {
                     painter_pixel(100 + (i << 3), 71, 3);
                 }
             }
@@ -421,7 +503,8 @@ namespace t8::scene {
 
         // 精灵分页
         {
-            for (auto i = 0; i < 4; i++) {
+            for (auto i = 0; i < 4; i++)
+            {
                 painter_rect(99 + i * 6, 87, 7, 6, 13);
                 painter_rect(100 + i * 6, 88, 5, 4, mouse_inside(100 + i * 6, 88, 5, 4) ? 14 : 15, true);
             }
@@ -432,8 +515,10 @@ namespace t8::scene {
 
         // 精灵预览
         {
-            for (auto dy = 0; dy < 32; dy++) {
-                for (auto dx = 0; dx < 128; dx++) {
+            for (auto dy = 0; dy < 32; dy++)
+            {
+                for (auto dx = 0; dx < 128; dx++)
+                {
                     auto color = state.font_mode ? painter_font(dx, (state.page << 5) + dy, true) : painter_sprite(dx, (state.page << 5) + dy);
                     painter_pixel(dx, 96 + dy, color);
                 }
