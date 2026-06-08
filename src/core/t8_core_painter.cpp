@@ -1,6 +1,6 @@
 #include "t8_core_painter.h"
 #include "t8_core_memory.h"
-#include "t8_utils_algo.h"
+#include "t8_algo.h"
 
 #include <algorithm>
 #include <iostream>
