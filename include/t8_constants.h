@@ -1,6 +1,6 @@
 #pragma once
-#include <cstdint>
 #include <SDL3/SDL_scancode.h>
+#include <cstdint>
 
 #define RGBA(r, g, b, a) (((r & 0xff) << 24) | ((g & 0xff) << 16) | ((b & 0xff) << 8) | (a & 0xff))
 
@@ -31,4 +31,8 @@ namespace t8 {
     constexpr auto SCANCODE_R = SDL_SCANCODE_R;
     constexpr auto SCANCODE_Y = SDL_SCANCODE_Y;
     constexpr auto SCANCODE_Z = SDL_SCANCODE_Z;
+
+    constexpr auto EDITOR_PENCIL = 1;
+    constexpr auto EDITOR_STRAW = 2;
+    constexpr auto EDITOR_BARREL = 3;
 }
