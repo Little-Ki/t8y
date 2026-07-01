@@ -6,6 +6,7 @@
 #include "input/mouse.h"
 #include "input/keyboard.h"
 #include "input/gamepad.h"
+#include "scene/console.h"
 
 #include "constants.h"
 
@@ -18,7 +19,7 @@ namespace t8::core
     static void scene_update(AppContext &ctx)
     {
     }
-    
+
     static void scene_draw(AppContext &ctx)
     {
     }
@@ -28,6 +29,9 @@ namespace t8::core
     }
 
     static void scene_leave(AppContext &ctx)
+    {
+    }
+    static void scene_swap(AppContext &ctx, uint16_t next)
     {
     }
 
@@ -71,38 +75,38 @@ namespace t8::core
         return true;
     }
 
-    static void handle_mouse(AppContext &ctx, const SDL_Event &event)
+    static void handle_mouse(MouseState &state, const SDL_Event &event, uint8_t pixel_size)
     {
 
         if (event.type == SDL_EVENT_MOUSE_MOTION)
         {
             const auto &i = event.motion;
             mouse_move(
-                ctx.mouse_state,
-                static_cast<int16_t>(i.x / ctx.pixel_size),
-                static_cast<int16_t>(i.y / ctx.pixel_size));
+                state,
+                static_cast<int16_t>(i.x / pixel_size),
+                static_cast<int16_t>(i.y / pixel_size));
         }
 
         if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
         {
             const auto &i = event.button;
-            mouse_button(ctx.mouse_state, i.button, true);
+            mouse_button(state, i.button, true);
         }
 
         if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
         {
             const auto &i = event.button;
-            mouse_button(ctx.mouse_state, i.button, false);
+            mouse_button(state, i.button, false);
         }
 
         if (event.type == SDL_EVENT_MOUSE_WHEEL)
         {
             const auto &i = event.wheel;
-            mouse_wheel(ctx.mouse_state, static_cast<int8_t>(i.y));
+            mouse_wheel(state, static_cast<int8_t>(i.y));
         }
     }
 
-    static void handle_keybd(const SDL_Event &event)
+    static void handle_keybd(KeyboardState &state, const SDL_Event &event)
     {
         if (event.type == SDL_EVENT_KEY_DOWN ||
             event.type == SDL_EVENT_KEY_UP)
@@ -111,31 +115,31 @@ namespace t8::core
             if (i.scancode > 255)
                 return;
 
-            keybd_button(i.scancode, i.mod, i.repeat, event.type == SDL_EVENT_KEY_DOWN);
+            keybd_button(state, i.scancode, i.mod, i.repeat, event.type == SDL_EVENT_KEY_DOWN);
         }
     }
 
-    static void handle_gamepad(const SDL_Event &event)
+    static void handle_gamepad(GamepadState &state, const SDL_Event &event)
     {
         if (event.type == SDL_EVENT_GAMEPAD_ADDED)
         {
-            gamepad_join(event.gdevice.which);
+            gamepad_join(state, event.gdevice.which);
         }
 
         if (event.type == SDL_EVENT_GAMEPAD_REMOVED)
         {
-            gamepad_remove(event.gdevice.which);
+            gamepad_remove(state, event.gdevice.which);
         }
 
         if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN ||
             event.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
         {
             const auto &i = event.gbutton;
-            gamepad_button(i.which, i.button, event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN);
+            gamepad_button(state, i.which, i.button, event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN);
         }
     }
 
-    static void handle_event(const SDL_Event &event)
+    static void handle_event(AppContext &ctx, const SDL_Event &event)
     {
         switch (event.type)
         {
@@ -144,57 +148,57 @@ namespace t8::core
         case SDL_EVENT_MOUSE_BUTTON_UP:
         case SDL_EVENT_MOUSE_WHEEL:
         {
-            emulator_handle_mouse(event);
+            handle_mouse(ctx.mouse_state, event, ctx.pixel_size);
             break;
         }
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
         {
-            emulator_handle_keybd(event);
+            handle_keybd(ctx.keybd_state, event);
             break;
         }
         case SDL_EVENT_TEXT_INPUT:
         {
-            ctx_inputs().push(event.text.text);
+            ctx.input_queue.push(event.text.text);
             break;
         }
         case SDL_EVENT_GAMEPAD_AXIS_MOTION:
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         case SDL_EVENT_GAMEPAD_BUTTON_UP:
         {
-            emulator_handle_gamepad(event);
+            handle_gamepad(ctx.gamepad_state, event);
             break;
         }
         }
     }
 
-    static void handle_signal()
+    static void handle_signal(AppContext &ctx)
     {
 
-        while (!ctx_signals().empty())
+        while (!ctx.signal_queue.empty())
         {
-            const auto s = ctx_signals().front();
-            ctx_signals().pop();
+            const auto s = ctx.signal_queue.front();
+            ctx.signal_queue.pop();
 
             if (s.type == SIGNAL_START_INPUT)
             {
-                window_input(true);
+                window_input(ctx.window_state, true);
             }
             if (s.type == SIGNAL_STOP_INPUT)
             {
-                window_input(false);
+                window_input(ctx.window_state, false);
             }
             if (s.type == SIGNAL_SWAP_EDITOR)
             {
-                scene_swap(SCENE_ID_EDITOR);
+                scene_swap(ctx, SCENE_ID_EDITOR);
             }
             if (s.type == SIGNAL_SWAP_CONSOLE)
             {
-                scene_swap(SCENE_ID_CONSOLE);
+                scene_swap(ctx, SCENE_ID_CONSOLE);
             }
             if (s.type == SIGNAL_SWAP_EXECUTOR)
             {
-                scene_swap(SCENE_ID_EXECUTOR);
+                scene_swap(ctx, SCENE_ID_EXECUTOR);
             }
             if (s.type == SIGNAL_EXCEPTION)
             {
@@ -219,7 +223,7 @@ namespace t8::core
 
             if (event.type != SDL_EVENT_QUIT)
             {
-                handle_event(event);
+                handle_event(ctx, event);
             }
             else
             {
@@ -231,30 +235,30 @@ namespace t8::core
 
             if (steps > 0)
             {
-                scene_update();
-                mouse_flush();
-                keybd_flush();
-                gamepad_flush();
+                scene_update(ctx);
+                mouse_flush(ctx.mouse_state);
+                keybd_flush(ctx.keybd_state);
+                gamepad_flush(ctx.gamepad_state);
             }
 
             timer->consume(steps);
 
-            scene_draw();
+            scene_draw(ctx);
 
-            auto p = buffer;
+            auto p = ctx.buffer;
             for (auto y = 0; y < 128; y++)
             {
                 for (auto x = 0; x < 128; x++)
                 {
-                    auto n = painter_pixel(x, y);
-                    n = painter_palette(mem, n);
-                    *(p++) = memory()->palette[n];
+                    auto n = painter_pixel(*ctx.memory, x, y);
+                    n = painter_palette(*ctx.memory, n);
+                    *(p++) = ctx.memory->palette[n];
                 }
             }
 
-            window_draw(buffer);
+            window_draw(ctx.window_state, ctx.buffer);
 
-            emulator_handle_signal();
+            handle_signal(ctx);
             std::this_thread::sleep_for(std::chrono::milliseconds(3));
         }
     }
