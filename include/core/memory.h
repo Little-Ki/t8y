@@ -1,9 +1,10 @@
 #pragma once
-
 #include <stdint.h>
 
-namespace t8::core {
-    struct Memory {
+namespace t8::core
+{
+    struct VirtualMemory
+    {
         uint8_t screen[0x2000];
         uint8_t sprite[0x2000];
 
@@ -22,8 +23,4 @@ namespace t8::core {
 
         uint32_t cache[256];
     };
-
-    Memory *memory();
-
-    void swap_memory(bool runtime);
 }

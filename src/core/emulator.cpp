@@ -1,126 +1,108 @@
-#include "t8_core_emulator.h"
-#include "t8_core_context.h"
-#include "t8_core_memory.h"
-#include "t8_font.h"
-#include "t8_input_gamepad.h"
-#include "t8_input_keybd.h"
-#include "t8_input_mouse.h"
+#include "core/emulator.h"
+#include "core/context.h"
+#include "core/painter.h"
+#include "core/window.h"
+#include "core/memory.h"
+#include "input/mouse.h"
+#include "input/keyboard.h"
+#include "input/gamepad.h"
 
-#include "t8_core_painter.h"
-#include "t8_core_window.h"
-
-#include "t8_constants.h"
-
-#include "t8_scene.h"
-#include "t8_scene_console.h"
-#include "t8_scene_editor.h"
-#include "t8_scene_executor.h"
-#include "t8_utils_timer.h"
+#include "constants.h"
 
 #include <thread>
 
-using namespace t8::scene;
 using namespace t8::input;
-using namespace t8::utils;
 
 namespace t8::core
 {
-    static uint32_t buffer[128 * 128];
-
-    void emulator_setup_palette()
+    static void scene_update(AppContext &ctx)
     {
-        painter_palette(0, 0, 0, 0, 255);
-        painter_palette(1, 250, 250, 250, 255);
-        painter_palette(2, 190, 190, 190, 255);
-        painter_palette(3, 200, 60, 90, 255);
-        painter_palette(4, 240, 130, 90, 255);
-        painter_palette(5, 250, 200, 120, 255);
-        painter_palette(6, 60, 180, 100, 255);
-        painter_palette(7, 40, 110, 120, 255);
-        painter_palette(8, 40, 70, 150, 255);
-        painter_palette(9, 150, 60, 150, 255);
-        painter_palette(10, 250, 120, 170, 255);
-        painter_palette(11, 250, 200, 170, 255);
-        painter_palette(12, 130, 140, 160, 255);
-        painter_palette(13, 150, 180, 190, 255);
-        painter_palette(14, 90, 110, 130, 255);
-        painter_palette(15, 50, 60, 90, 255);
+    }
+    
+    static void scene_draw(AppContext &ctx)
+    {
     }
 
-    void emulator_setup_fonts()
+    static void scene_enter(AppContext &ctx)
     {
-        std::memcpy(memory()->default_font, font_data, 2048);
-        std::memcpy(memory()->custom_font, font_data, 2048);
     }
 
-    void emulator_setup_scene()
+    static void scene_leave(AppContext &ctx)
     {
-        scene_register(SCENE_ID_CONSOLE, {console_update,
-                                          console_draw,
-                                          console_enter,
-                                          console_leave});
-
-        scene_register(SCENE_ID_EDITOR, {editor_update,
-                                         editor_draw,
-                                         editor_enter,
-                                         editor_leave});
-
-        scene_register(SCENE_ID_EXECUTOR,
-                       {executor_update,
-                        executor_draw,
-                        executor_enter,
-                        executor_leave});
-
-        scene_swap(SCENE_ID_CONSOLE);
     }
 
-    bool emulator_initialize()
+    static void setup_palette(VirtualMemory &mem)
     {
-        if (!window_initialize(128, 128, context()->pixel_size))
+        painter_palette(mem, 0, 0, 0, 0, 255);
+        painter_palette(mem, 1, 250, 250, 250, 255);
+        painter_palette(mem, 2, 190, 190, 190, 255);
+        painter_palette(mem, 3, 200, 60, 90, 255);
+        painter_palette(mem, 4, 240, 130, 90, 255);
+        painter_palette(mem, 5, 250, 200, 120, 255);
+        painter_palette(mem, 6, 60, 180, 100, 255);
+        painter_palette(mem, 7, 40, 110, 120, 255);
+        painter_palette(mem, 8, 40, 70, 150, 255);
+        painter_palette(mem, 9, 150, 60, 150, 255);
+        painter_palette(mem, 10, 250, 120, 170, 255);
+        painter_palette(mem, 11, 250, 200, 170, 255);
+        painter_palette(mem, 12, 130, 140, 160, 255);
+        painter_palette(mem, 13, 150, 180, 190, 255);
+        painter_palette(mem, 14, 90, 110, 130, 255);
+        painter_palette(mem, 15, 50, 60, 90, 255);
+    }
+
+    static void setup_fonts(VirtualMemory &memory)
+    {
+        std::memcpy(&memory.default_font, FONT_DATA, 2048);
+        std::memcpy(&memory.custom_font, FONT_DATA, 2048);
+    }
+
+    bool emulator_init(AppContext &ctx)
+    {
+        if (!window_init(ctx.window_state, 128, 128, ctx.pixel_size))
         {
             return false;
         }
 
-        painter_reset();
-
-        emulator_setup_scene();
-        emulator_setup_palette();
-        emulator_setup_fonts();
+        painter_reset(*ctx.memory);
+        setup_palette(*ctx.memory);
+        setup_fonts(*ctx.memory);
 
         return true;
     }
 
-    void emulator_handle_mouse(const SDL_Event &event)
+    static void handle_mouse(AppContext &ctx, const SDL_Event &event)
     {
 
         if (event.type == SDL_EVENT_MOUSE_MOTION)
         {
             const auto &i = event.motion;
             mouse_move(
-                static_cast<int16_t>(i.x / context()->pixel_size),
-                static_cast<int16_t>(i.y / context()->pixel_size));
+                ctx.mouse_state,
+                static_cast<int16_t>(i.x / ctx.pixel_size),
+                static_cast<int16_t>(i.y / ctx.pixel_size));
         }
 
         if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
         {
             const auto &i = event.button;
-            mouse_button(i.button, true);
+            mouse_button(ctx.mouse_state, i.button, true);
         }
 
         if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
         {
             const auto &i = event.button;
-            mouse_button(i.button, false);
+            mouse_button(ctx.mouse_state, i.button, false);
         }
 
         if (event.type == SDL_EVENT_MOUSE_WHEEL)
         {
             const auto &i = event.wheel;
-            mouse_wheel(static_cast<int8_t>(i.y));
+            mouse_wheel(ctx.mouse_state, static_cast<int8_t>(i.y));
         }
     }
 
-    void emulator_handle_keybd(const SDL_Event &event)
+    static void handle_keybd(const SDL_Event &event)
     {
         if (event.type == SDL_EVENT_KEY_DOWN ||
             event.type == SDL_EVENT_KEY_UP)
@@ -133,7 +115,7 @@ namespace t8::core
         }
     }
 
-    void emulator_handle_gamepad(const SDL_Event &event)
+    static void handle_gamepad(const SDL_Event &event)
     {
         if (event.type == SDL_EVENT_GAMEPAD_ADDED)
         {
@@ -153,7 +135,7 @@ namespace t8::core
         }
     }
 
-    void emulator_handle_event(const SDL_Event &event)
+    static void handle_event(const SDL_Event &event)
     {
         switch (event.type)
         {
@@ -186,7 +168,7 @@ namespace t8::core
         }
     }
 
-    void emulator_handle_signal()
+    static void handle_signal()
     {
 
         while (!ctx_signals().empty())
@@ -226,7 +208,7 @@ namespace t8::core
         }
     }
 
-    void emulator_run()
+    void emulator_run(AppContext &ctx)
     {
 
         SDL_Event event;
@@ -237,14 +219,15 @@ namespace t8::core
 
             if (event.type != SDL_EVENT_QUIT)
             {
-                emulator_handle_event(event);
+                handle_event(event);
             }
             else
             {
                 return;
             }
 
-            auto steps = timer_steps();
+            auto timer = &ctx.timer;
+            auto steps = timer->steps();
 
             if (steps > 0)
             {
@@ -254,7 +237,7 @@ namespace t8::core
                 gamepad_flush();
             }
 
-            timer_consume(steps);
+            timer->consume(steps);
 
             scene_draw();
 
@@ -264,7 +247,7 @@ namespace t8::core
                 for (auto x = 0; x < 128; x++)
                 {
                     auto n = painter_pixel(x, y);
-                    n = painter_palette(n);
+                    n = painter_palette(mem, n);
                     *(p++) = memory()->palette[n];
                 }
             }
@@ -276,8 +259,8 @@ namespace t8::core
         }
     }
 
-    void emulator_quit()
+    void emulator_quit(AppContext &ctx)
     {
-        window_quit();
+        window_quit(ctx.window_state);
     }
 }
