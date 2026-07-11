@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace t8::input
+namespace t8::input::keyboard
 {
 
     struct KeyboardState
@@ -13,25 +13,25 @@ namespace t8::input
         uint8_t mod{0};
     };
 
-    void keybd_flush(KeyboardState &state);
+    void flush(KeyboardState &s) noexcept;
 
-    void keybd_button(KeyboardState &state, uint8_t btn, uint16_t mod, bool repeat, bool down);
+    void button(KeyboardState &s, uint8_t btn, uint16_t mod, bool repeat, bool down);
 
-    bool keybd_down(const KeyboardState &state, uint8_t btn);
+    bool down(const KeyboardState &s, uint8_t btn);
 
-    bool keybd_pressed(const KeyboardState &state, uint8_t btn);
+    bool pressed(const KeyboardState &s, uint8_t btn);
 
-    bool keybd_repeated(const KeyboardState &state, uint8_t btn);
+    bool repeated(const KeyboardState &s, uint8_t btn);
 
-    bool keybd_released(const KeyboardState &state, uint8_t btn);
+    bool released(const KeyboardState &s, uint8_t btn);
 
-    bool keybd_triggered(const KeyboardState &state, uint8_t btn);
+    bool triggered(const KeyboardState &s, uint8_t btn);
 
-    bool keybd_ctrl(const KeyboardState &state);
+    bool ctrl(const KeyboardState &s);
 
-    bool keybd_shift(const KeyboardState &state);
+    bool shift(const KeyboardState &s);
 
-    bool keybd_alt(const KeyboardState &state);
+    bool alt(const KeyboardState &s);
 
-    bool keybd_capslock(const KeyboardState &state);
+    bool capslock(const KeyboardState &s);
 }

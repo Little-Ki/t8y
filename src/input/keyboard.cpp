@@ -1,19 +1,19 @@
 #include "input/keyboard.h"
 #include <memory>
 
-namespace t8::input
+namespace t8::input::keyboard
 {
-    void keybd_flush(KeyboardState &state)
+    void flush(KeyboardState &s)
     {
-        std::memcpy(state.previous, state.current, 32);
-        std::memset(state.repeated, 0, sizeof(state.repeated));
+        std::memcpy(s.previous, s.current, 32);
+        std::memset(s.repeated, 0, sizeof(s.repeated));
     }
 
-    void keybd_button(KeyboardState &state, uint8_t btn, uint16_t mod, bool repeat, bool down)
+    void button(KeyboardState &s, uint8_t btn, uint16_t mod, bool repeat, bool down)
     {
         auto i = btn >> 3;
-        auto &current = state.current[i];
-        auto &repeated = state.repeated[i];
+        auto &current = s.current[i];
+        auto &repeated = s.repeated[i];
 
         if (down)
         {
@@ -29,54 +29,54 @@ namespace t8::input
             repeated |= 1 << (btn & 0b111);
         }
 
-        state.mod = mod & 0xFF;
+        s.mod = mod & 0xFF;
     }
 
-    bool keybd_down(const KeyboardState &state, uint8_t btn)
+    bool down(const KeyboardState &s, uint8_t btn)
     {
-        return state.current[btn >> 3] & (1 << (btn & 0b111));
+        return s.current[btn >> 3] & (1 << (btn & 0b111));
     }
 
-    bool keybd_pressed(const KeyboardState &state, uint8_t btn)
+    bool pressed(const KeyboardState &s, uint8_t btn)
     {
-        return (state.current[btn >> 3] & (1 << (btn & 0b111))) &&
-               !((state.previous[btn >> 3] & (1 << (btn & 0b111))));
+        return (s.current[btn >> 3] & (1 << (btn & 0b111))) &&
+               !((s.previous[btn >> 3] & (1 << (btn & 0b111))));
     }
 
-    bool keybd_released(const KeyboardState &state, uint8_t btn)
+    bool released(const KeyboardState &s, uint8_t btn)
     {
-        return (state.current[btn >> 3] & (1 << (btn & 0b111))) &&
-               !((state.previous[btn >> 3] & (1 << (btn & 0b111))));
+        return (s.current[btn >> 3] & (1 << (btn & 0b111))) &&
+               !((s.previous[btn >> 3] & (1 << (btn & 0b111))));
     }
 
-    bool keybd_repeated(const KeyboardState &state, uint8_t btn)
+    bool repeated(const KeyboardState &s, uint8_t btn)
     {
-        return state.repeated[btn >> 3] & (1 << (btn & 0b111));
+        return s.repeated[btn >> 3] & (1 << (btn & 0b111));
     }
 
-    bool keybd_triggered(const KeyboardState &state, uint8_t btn)
+    bool triggered(const KeyboardState &s, uint8_t btn)
     {
-        return keybd_pressed(state, btn) || keybd_repeated(state, btn);
+        return pressed(s, btn) || repeated(s, btn);
     }
 
-    bool keybd_ctrl(const KeyboardState &state)
+    bool ctrl(const KeyboardState &s)
     {
-        return state.mod & (0x0040 | 0x0080);
+        return s.mod & (0x0040 | 0x0080);
     }
 
-    bool keybd_shift(const KeyboardState &state)
+    bool shift(const KeyboardState &s)
     {
-        return state.mod & (0x0001 | 0x0002);
+        return s.mod & (0x0001 | 0x0002);
     }
 
-    bool keybd_alt(const KeyboardState &state)
+    bool alt(const KeyboardState &s)
     {
-        return state.mod & (0x0100 | 0x0200);
+        return s.mod & (0x0100 | 0x0200);
     }
 
-    bool keybd_capslock(const KeyboardState &state)
+    bool capslock(const KeyboardState &s)
     {
-        return state.mod & 0x2000;
+        return s.mod & 0x2000;
     }
 
 }

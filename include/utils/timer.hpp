@@ -1,8 +1,7 @@
 #pragma once
 #include <chrono>
 
-namespace t8 {
-
+namespace t8::utils {
     class Timer {
     public:
         Timer() {

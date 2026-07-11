@@ -1,9 +1,9 @@
 #include "core/window.h"
 
-namespace t8::core
+namespace t8::core::window
 {
 
-    bool window_init(WindowState &state, uint32_t width, uint32_t height, uint32_t pixel_size)
+    bool init(WindowState &state, uint32_t width, uint32_t height, uint32_t pixel_size)
     {
         if (state.window)
         {
@@ -50,7 +50,7 @@ namespace t8::core
         return true;
     }
 
-    void window_quit(WindowState &state)
+    void quit(WindowState &state)
     {
         if (state.renderer)
         {
@@ -65,7 +65,7 @@ namespace t8::core
         SDL_Quit();
     }
 
-    void window_draw(WindowState &state, const uint32_t *pixels)
+    void draw(WindowState &state, const uint32_t *pixels)
     {
         SDL_RenderClear(state.renderer);
         SDL_UpdateTexture(state.texture, nullptr, pixels, 128 * sizeof(uint32_t));
@@ -73,12 +73,12 @@ namespace t8::core
         SDL_RenderPresent(state.renderer);
     }
 
-    void window_event(SDL_Event &event)
+    void event(SDL_Event &event)
     {
         SDL_PollEvent(&event);
     }
 
-    void window_input(WindowState &state, bool enable)
+    void input(WindowState &state, bool enable)
     {
         if (enable)
         {

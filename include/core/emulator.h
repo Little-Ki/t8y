@@ -4,11 +4,11 @@
 
 #include "core/context.h"
 
-namespace t8::core
+namespace t8::core::emulator
 {
-    bool emulator_init(AppContext &ctx);
+    bool init(AppContext &ctx);
 
-    void emulator_run(AppContext &ctx);
+    void run(AppContext &ctx);
 
-    void emulator_quit(AppContext &ctx);
+    void quit(AppContext &ctx);
 }

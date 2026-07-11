@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-namespace t8::input
+namespace t8::input::mouse
 {
 
     struct MouseState
@@ -19,22 +19,22 @@ namespace t8::input
         MouseTracker tracker[3];
     };
 
-    void mouse_flush(MouseState &state);
+    void flush(MouseState &s);
 
-    void mouse_move(MouseState &state, int16_t x, int16_t y);
+    void move(MouseState &s, int16_t x, int16_t y);
 
-    void mouse_button(MouseState &state, uint8_t btn, bool down);
+    void button(MouseState &s, uint8_t btn, bool down);
 
-    void mouse_wheel(MouseState &state, int16_t z);
+    void wheel(MouseState &s, int16_t z);
 
-    bool mouse_pressed(const MouseState &state, uint8_t btn);
+    bool clicked(MouseState &s, int x, int y, int w, int h, uint8_t btn = 1);
 
-    bool mouse_clicked(MouseState &state, int x, int y, int w, int h, uint8_t btn = 1);
+    bool dragging(MouseState &s, int x, int y, int w, int h, uint8_t btn = 1);
 
-    bool mouse_dragging(MouseState &state, int x, int y, int w, int h, uint8_t btn = 1);
+    bool pressed(const MouseState &s, uint8_t btn);
 
-    bool mouse_inside(const MouseState &state, int x, int y, int w, int h);
+    bool inside(const MouseState &s, int x, int y, int w, int h);
 
-    bool mouse_down(const MouseState &state, uint8_t btn);
+    bool down(const MouseState &s, uint8_t btn);
 
 }

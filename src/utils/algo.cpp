@@ -3,7 +3,7 @@
 
 #include "utils/algo.h"
 
-namespace t8
+namespace t8::utils
 {
 
     void str_ltrim(std::string &str)

@@ -1,92 +1,91 @@
 #include "input/mouse.h"
 
-namespace t8::input
+namespace t8::input::mouse
 {
-
-    void mouse_flush(MouseState &state)
+    void flush(MouseState &s)
     {
         for (auto i = 1; i <= 3; i++)
-            if (!mouse_down(state, i) && state.tracker[i - 1].focus)
-                state.tracker[i - 1].focus = 0;
+            if (!down(s, i) && s.tracker[i - 1].focus)
+                s.tracker[i - 1].focus = 0;
 
-        for (auto &x : state.tracker)
+        for (auto &x : s.tracker)
             x.index = 0;
 
-        state.dx = 0;
-        state.dy = 0;
-        state.z = 0;
-        state.previous = state.current;
+        s.dx = 0;
+        s.dy = 0;
+        s.z = 0;
+        s.previous = s.current;
     }
 
-    void mouse_move(MouseState &state, int16_t x, int16_t y)
+    void move(MouseState &s, int16_t x, int16_t y)
     {
-        state.dx += x - state.x;
-        state.dy += y - state.y;
-        state.x = x;
-        state.y = y;
+        s.dx += x - s.x;
+        s.dy += y - s.y;
+        s.x = x;
+        s.y = y;
     }
 
-    void mouse_button(MouseState &state, uint8_t btn, bool down)
+    void button(MouseState &s, uint8_t btn, bool down)
     {
         if (down)
         {
-            state.current |= (1 << (btn - 1));
+            s.current |= (1 << (btn - 1));
         }
         else
         {
-            state.current &= ~(1 << (btn - 1));
+            s.current &= ~(1 << (btn - 1));
         }
     }
 
-    void mouse_wheel(MouseState &state, int16_t z)
+    void wheel(MouseState &s, int16_t z)
     {
-        state.z = z;
+        s.z = z;
     }
 
-    bool mouse_pressed(const MouseState &state, uint8_t btn)
+    bool pressed(const MouseState &s, uint8_t btn)
     {
-        return state.current & (0x1 << (btn - 1));
+        return s.current & (0x1 << (btn - 1));
     }
 
-    bool mouse_clicked(MouseState &state, int x, int y, int w, int h, uint8_t btn)
+    bool clicked(MouseState &s, int x, int y, int w, int h, uint8_t btn)
     {
         if (btn & 0b11111100)
             return false;
 
-        auto tracker = &state.tracker[btn - 1];
+        auto tracker = &s.tracker[btn - 1];
         auto id = ++(tracker->index);
-        auto px = state.x, py = state.y;
+        auto px = s.x, py = s.y;
 
-        if (mouse_pressed(state, btn) && !tracker->focus)
+        if (pressed(s, btn) && !tracker->focus)
         {
-            if (mouse_inside(state, x, y, w, h))
+            if (inside(s, x, y, w, h))
                 tracker->focus = id;
         }
-        else if (tracker->focus == id && !mouse_down(state, btn))
+        else if (tracker->focus == id && !down(s, btn))
         {
             tracker->focus = 0;
-            if (mouse_inside(state, x, y, w, h))
+            if (inside(s, x, y, w, h))
                 return true;
         }
 
         return false;
     }
 
-    bool mouse_dragging(MouseState &state, int x, int y, int w, int h, uint8_t btn)
+    bool dragging(MouseState &s, int x, int y, int w, int h, uint8_t btn)
     {
         if (btn & 0b11111100)
             return false;
 
-        auto tracker = &state.tracker[btn - 1];
+        auto tracker = &s.tracker[btn - 1];
         auto id = ++(tracker->index);
-        auto px = state.x, py = state.y;
+        auto px = s.x, py = s.y;
 
-        if (mouse_pressed(state, btn) && !tracker->focus)
+        if (pressed(s, btn) && !tracker->focus)
         {
-            if (mouse_inside(state, x, y, w, h))
+            if (inside(s, x, y, w, h))
                 tracker->focus = id;
         }
-        else if (tracker->focus == id && mouse_down(state, btn) && mouse_inside(state, x, y, w, h))
+        else if (tracker->focus == id && down(s, btn) && inside(s, x, y, w, h))
         {
             return true;
         }
@@ -94,15 +93,15 @@ namespace t8::input
         return false;
     }
 
-    bool mouse_inside(const MouseState &state, int x, int y, int w, int h)
+    bool inside(const MouseState &s, int x, int y, int w, int h)
     {
-        const auto px = state.x, py = state.y;
+        const auto px = s.x, py = s.y;
         return px >= x && py >= y && px < (x + w) && py < (y + h);
     }
 
-    bool mouse_down(const MouseState &state, uint8_t btn)
+    bool down(const MouseState &s, uint8_t btn)
     {
-        return state.current & (1 << (btn - 1));
+        return s.current & (1 << (btn - 1));
     }
 
 }

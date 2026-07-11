@@ -9,10 +9,10 @@ int main(int argc, char *argv[])
 {
     AppContext ctx;
 
-    if (emulator_init(ctx))
+    if (emulator::init(ctx))
     {
-        emulator_run(ctx);
-        emulator_quit(ctx);
+        emulator::run(ctx);
+        emulator::quit(ctx);
     }
 
     return 0;

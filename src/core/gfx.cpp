@@ -1,11 +1,11 @@
-#include "core/painter.h"
+#include "core/gfx.h"
 #include "core/memory.h"
 #include "utils/algo.h"
 
 #include <algorithm>
 #include <iostream>
 
-namespace t8::core
+namespace t8::core::gfx
 {
     union bitfield_4
     {
@@ -17,14 +17,14 @@ namespace t8::core
         };
     };
 
-    void painter_reset(VirtualMemory &mem)
+    void reset_all(VirtualMemory &mem)
     {
-        painter_reset_palette(mem);
-        painter_clip(mem);
-        painter_camera(mem);
+        reset_palette(mem);
+        set_clip(mem);
+        set_offset(mem);
     }
 
-    void painter_clip(VirtualMemory &mem, int x, int y, int w, int h)
+    void set_clip(VirtualMemory &mem, int x, int y, int w, int h)
     {
 
         auto l = std::clamp(x, 0, 128);
@@ -40,19 +40,19 @@ namespace t8::core
         mem.view_clip[3] = static_cast<uint8_t>(b - t);
     }
 
-    void painter_camera(VirtualMemory &mem, int8_t x, int8_t y)
+    void set_offset(VirtualMemory &mem, int8_t x, int8_t y)
     {
         mem.draw_offset[0] = x;
         mem.draw_offset[1] = y;
     }
 
-    void painter_clear(VirtualMemory &mem, uint8_t c)
+    void clear(VirtualMemory &mem, uint8_t c)
     {
         c = (c & 0xF) | ((c & 0xF) << 4);
         std::fill(mem.screen, mem.screen + sizeof(mem.screen), c);
     }
 
-    void painter_palette_mask(VirtualMemory &mem, uint8_t color, bool t)
+    void set_trans(VirtualMemory &mem, uint8_t color, bool t)
     {
         if (t)
         {
@@ -64,26 +64,25 @@ namespace t8::core
         }
     }
 
-    void painter_palette_mask(VirtualMemory &mem, uint16_t t)
+    void set_trans(VirtualMemory &mem, uint16_t t)
     {
         mem.palette_mask = t;
     }
 
-    void painter_reset_palette(VirtualMemory &mem)
+    void reset_palette(VirtualMemory &mem)
     {
         for (auto i = 0; i < 16; i++)
         {
-            painter_palette(mem, i, i);
+            set_pmap(mem, i, i);
         }
     }
 
-    void painter_palette(VirtualMemory &mem, uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+    void set_pcolor(VirtualMemory &mem, uint8_t index, uint32_t c)
     {
-        const uint32_t color = (((r & 0xff) << 24) | ((g & 0xff) << 16) | ((b & 0xff) << 8) | (a & 0xff));
-        mem.palette[index & 0xF] = color;
+        mem.palette[index & 0xF] = c;
     }
 
-    void painter_palette(VirtualMemory &mem, uint8_t n, uint8_t map)
+    void set_pmap(VirtualMemory &mem, uint8_t n, uint8_t map)
     {
         if (n & 0xF0)
             return;
@@ -92,7 +91,7 @@ namespace t8::core
         (n & 0x1) ? (field->lo = map) : (field->hi = map);
     }
 
-    uint8_t painter_palette(VirtualMemory &mem, uint8_t n)
+    uint8_t get_pmap(VirtualMemory &mem, uint8_t n)
     {
         if (n & 0xF0)
             return 0;
@@ -101,7 +100,7 @@ namespace t8::core
         return (n & 0x1) ? (field->lo) : (field->hi);
     }
 
-    void painter_pixel(VirtualMemory &mem, int x, int y, uint8_t color)
+    void set_pixel(VirtualMemory &mem, int x, int y, uint8_t color)
     {
         x += mem.draw_offset[0];
         y += mem.draw_offset[1];
@@ -123,7 +122,7 @@ namespace t8::core
         }
     }
 
-    uint8_t painter_pixel(VirtualMemory &mem, int x, int y)
+    uint8_t get_pixel(VirtualMemory &mem, int x, int y)
     {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return 0;
@@ -133,7 +132,7 @@ namespace t8::core
         return (t & 1) ? (field->lo) : (field->hi);
     }
 
-    void painter_sprite(VirtualMemory &mem, int x, int y, uint8_t color)
+    void set_sprite(VirtualMemory &mem, int x, int y, uint8_t color)
     {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return;
@@ -143,7 +142,7 @@ namespace t8::core
         (t & 1) ? (field->lo = color) : (field->hi = color);
     }
 
-    uint8_t painter_sprite(VirtualMemory &mem, int x, int y)
+    uint8_t get_sprite(VirtualMemory &mem, int x, int y)
     {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return 0;
@@ -153,7 +152,7 @@ namespace t8::core
         return (t & 1) ? (field->lo) : (field->hi);
     }
 
-    void painter_map(VirtualMemory &mem, int x, int y, uint8_t n)
+    void set_tilemap(VirtualMemory &mem, int x, int y, uint8_t n)
     {
         if (x < 0 || x >= 128 || y < 0 || y >= 128)
             return;
@@ -161,7 +160,7 @@ namespace t8::core
         mem.map[i] = n;
     }
 
-    uint8_t painter_map(VirtualMemory &mem, int x, int y)
+    uint8_t get_tilemap(VirtualMemory &mem, int x, int y)
     {
         if (x < 0 || x >= 128 || y < 0 || y >= 128)
             return 0;
@@ -169,17 +168,17 @@ namespace t8::core
         return mem.map[i];
     }
 
-    void painter_flags(VirtualMemory &mem, uint8_t n, uint8_t f)
+    void set_flags(VirtualMemory &mem, uint8_t n, uint8_t f)
     {
         mem.flags[n] = f;
     }
 
-    uint8_t painter_flags(VirtualMemory &mem, uint8_t n)
+    uint8_t get_flags(VirtualMemory &mem, uint8_t n)
     {
         return mem.flags[n];
     }
 
-    void painter_font(VirtualMemory &mem, int x, int y, bool value, bool custom)
+    void set_font(VirtualMemory &mem, int x, int y, bool value, bool custom)
     {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return;
@@ -189,7 +188,7 @@ namespace t8::core
         value ? (*field |= (1 << (t & 0b111))) : (*field &= ~(1 << (t & 0b111)));
     }
 
-    bool painter_font(VirtualMemory &mem, int x, int y, bool custom)
+    bool get_font(VirtualMemory &mem, int x, int y, bool custom)
     {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return false;
@@ -199,7 +198,7 @@ namespace t8::core
         return *field & (1 << (t & 0b111));
     }
 
-    void painter_char(VirtualMemory &mem, uint8_t n, int x, int y, uint8_t color, bool custom)
+    void draw_char(VirtualMemory &mem, uint8_t n, int x, int y, uint8_t color, bool custom)
     {
         auto sprite_x = (n & 0xF) << 3;
         auto sprite_y = (n >> 4) << 3;
@@ -208,14 +207,14 @@ namespace t8::core
         {
             for (auto dx = 0; dx < 8; dx++)
             {
-                bool c = painter_font(mem, sprite_x + dx, sprite_y + dy, custom);
+                bool c = get_font(mem, sprite_x + dx, sprite_y + dy, custom);
                 if (c)
-                    painter_pixel(mem, x + dx, y + dy, color);
+                    set_pixel(mem, x + dx, y + dy, color);
             }
         }
     }
 
-    void painter_line(VirtualMemory &mem, int x0, int y0, int x1, int y1, uint8_t color)
+    void draw_line(VirtualMemory &mem, int x0, int y0, int x1, int y1, uint8_t color)
     {
         auto dx = x1 - x0;
         auto dy = y1 - y0;
@@ -232,7 +231,7 @@ namespace t8::core
         {
             for (; x != x1; x += fx)
             {
-                painter_pixel(mem, x, y, color);
+                set_pixel(mem, x, y, color);
                 if ((error += delta) > dx)
                 {
                     y += fy;
@@ -244,7 +243,7 @@ namespace t8::core
         {
             for (; y != y1; y += fy)
             {
-                painter_pixel(mem, x, y, color);
+                set_pixel(mem, x, y, color);
                 if ((error += delta) > dy)
                 {
                     x += fx;
@@ -254,18 +253,18 @@ namespace t8::core
         }
     }
 
-    void painter_circle(VirtualMemory &mem, int xc, int yc, int r, uint8_t color, bool fill)
+    void draw_circle(VirtualMemory &mem, int xc, int yc, int r, uint8_t color, bool fill)
     {
         const auto put = [&](int xc, int yc, int x, int y)
         {
-            painter_pixel(mem, xc + x, yc + y, color);
-            painter_pixel(mem, xc - x, yc + y, color);
-            painter_pixel(mem, xc + x, yc - y, color);
-            painter_pixel(mem, xc - x, yc - y, color);
-            painter_pixel(mem, xc + y, yc + x, color);
-            painter_pixel(mem, xc - y, yc + x, color);
-            painter_pixel(mem, xc + y, yc - x, color);
-            painter_pixel(mem, xc - y, yc - x, color);
+            set_pixel(mem, xc + x, yc + y, color);
+            set_pixel(mem, xc - x, yc + y, color);
+            set_pixel(mem, xc + x, yc - y, color);
+            set_pixel(mem, xc - x, yc - y, color);
+            set_pixel(mem, xc + y, yc + x, color);
+            set_pixel(mem, xc - y, yc + x, color);
+            set_pixel(mem, xc + y, yc - x, color);
+            set_pixel(mem, xc - y, yc - x, color);
         };
 
         int x = 0, y = r;
@@ -295,17 +294,17 @@ namespace t8::core
         }
     }
 
-    void painter_rect(VirtualMemory &mem, int x, int y, int w, int h, uint8_t color, bool fill)
+    void draw_rect(VirtualMemory &mem, int x, int y, int w, int h, uint8_t color, bool fill)
     {
         for (auto dx = 0; dx < w; dx += 1)
         {
-            painter_pixel(mem, x + dx, y, color);
-            painter_pixel(mem, x + dx, y + h - 1, color);
+            set_pixel(mem, x + dx, y, color);
+            set_pixel(mem, x + dx, y + h - 1, color);
         }
         for (auto dy = 0; dy < h; dy += 1)
         {
-            painter_pixel(mem, x, y + dy, color);
-            painter_pixel(mem, x + w - 1, y + dy, color);
+            set_pixel(mem, x, y + dy, color);
+            set_pixel(mem, x + w - 1, y + dy, color);
         }
 
         if (fill)
@@ -319,7 +318,7 @@ namespace t8::core
             {
                 for (auto x = l; x < r; x += 1)
                 {
-                    painter_pixel(mem, x, y, color);
+                    set_pixel(mem, x, y, color);
                 }
             }
         }

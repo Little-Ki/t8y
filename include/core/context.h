@@ -7,9 +7,14 @@
 
 namespace t8::input
 {
-    struct MouseState;
-    struct KeyboardState;
-    struct GamepadState;
+    struct mouse::MouseState;
+    struct keyboard::KeyboardState;
+    struct gamepad::GamepadState;
+}
+
+namespace t8::scene
+{
+    struct console::ConsoleState;
 }
 
 namespace t8::core
@@ -35,15 +40,15 @@ namespace t8::core
 
         std::string script;
 
-        input::KeyboardState keybd_state;
-        input::MouseState mouse_state;
-        input::GamepadState gamepad_state;
-        WindowState window_state;
+        mouse::MouseState mouse;
+        keyboard::KeyboardState keyboard;
+        gamepad::GamepadState gamepad;
+        window::WindowState window;
 
-        std::queue<std::string> input_queue;
-        std::queue<Signal> signal_queue;
+        std::queue<std::string> inputs;
+        std::queue<Signal> signals;
 
-        Timer timer;
+        utils::Timer timer;
 
         uint32_t pixel_size = 3;
         uint32_t buffer[128 * 128];
