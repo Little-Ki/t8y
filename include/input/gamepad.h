@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace t8::input::gamepad
+namespace t8::input
 {
     struct GamepadState
     {
@@ -25,17 +25,17 @@ namespace t8::input::gamepad
         uint32_t mapper[4]{0};
     };
 
-    void flush(GamepadState &s);
+    void g_flush(GamepadState &s);
 
-    void join(GamepadState &s, uint32_t id);
+    void g_join(GamepadState &s, uint32_t id);
 
-    void remove(GamepadState &s, uint32_t id);
+    void g_remove(GamepadState &s, uint32_t id);
 
-    void button(GamepadState &s, uint32_t id, uint8_t btn, bool down);
+    void g_button(GamepadState &s, uint32_t id, uint8_t btn, bool down);
 
-    bool down(const GamepadState &s, uint8_t i, uint8_t btn);
+    bool g_down(const GamepadState &s, uint8_t i, uint8_t btn);
 
-    bool pressed(const GamepadState &s, uint8_t i, uint8_t btn);
+    bool g_pressed(const GamepadState &s, uint8_t i, uint8_t btn);
     
-    bool released(const GamepadState &s, uint8_t i, uint8_t btn);
+    bool g_released(const GamepadState &s, uint8_t i, uint8_t btn);
 }

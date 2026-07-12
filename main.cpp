@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <memory>
 
 #include "core/emulator.h"
 
@@ -7,12 +8,12 @@ using namespace t8::core;
 
 int main(int argc, char *argv[])
 {
-    AppContext ctx;
+    auto ctx = std::make_unique<AppContext>();
 
-    if (emulator::init(ctx))
+    if (emu_init(*ctx))
     {
-        emulator::run(ctx);
-        emulator::quit(ctx);
+        emu_run(*ctx);
+        emu_quit(*ctx);
     }
 
     return 0;

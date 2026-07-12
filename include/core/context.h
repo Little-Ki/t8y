@@ -3,28 +3,17 @@
 #include <string>
 #include <variant>
 
+#include "core/memory.h"
+#include "core/window.h"
+#include "input/mouse.h"
+#include "input/keyboard.h"
+#include "input/gamepad.h"
+
 #include "utils/timer.hpp"
 
-namespace t8::input
-{
-    struct mouse::MouseState;
-    struct keyboard::KeyboardState;
-    struct gamepad::GamepadState;
-}
+namespace t8::core {
 
-namespace t8::scene
-{
-    struct console::ConsoleState;
-}
-
-namespace t8::core
-{
-    struct VirtualMemory;
-
-    struct WindowState;
-
-    struct Signal
-    {
+    struct Signal {
         uint32_t type;
         std::variant<
             std::monostate,
@@ -32,18 +21,17 @@ namespace t8::core
             value;
     };
 
-    struct AppContext
-    {
+    struct AppContext {
         VirtualMemory base_memory;
         VirtualMemory exec_memory;
         VirtualMemory *memory = &base_memory;
 
         std::string script;
 
-        mouse::MouseState mouse;
-        keyboard::KeyboardState keyboard;
-        gamepad::GamepadState gamepad;
-        window::WindowState window;
+        input::MouseState mouse;
+        input::KeyboardState keyboard;
+        input::GamepadState gamepad;
+        WindowState window;
 
         std::queue<std::string> inputs;
         std::queue<Signal> signals;

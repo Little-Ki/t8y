@@ -2,10 +2,10 @@
 
 #include <algorithm>
 
-namespace t8::input::gamepad
+namespace t8::input
 {
 
-    void flush(GamepadState &s)
+    void g_flush(GamepadState &s)
     {
         s.previous[0] = s.current[0];
         s.previous[1] = s.current[1];
@@ -13,7 +13,7 @@ namespace t8::input::gamepad
         s.previous[3] = s.current[3];
     }
 
-    void join(GamepadState &s, uint32_t id)
+    void g_join(GamepadState &s, uint32_t id)
     {
         for (auto &i : s.mapper)
         {
@@ -25,7 +25,7 @@ namespace t8::input::gamepad
         }
     }
 
-    void remove(GamepadState &s, uint32_t id)
+    void g_remove(GamepadState &s, uint32_t id)
     {
         for (auto &i : s.mapper)
         {
@@ -51,7 +51,7 @@ namespace t8::input::gamepad
         }
     }
 
-    void button(GamepadState &s, uint32_t id, uint8_t btn, bool down)
+    void g_button(GamepadState &s, uint32_t id, uint8_t btn, bool down)
     {
         for (auto i = 0; i < 4; i++)
         {
@@ -63,21 +63,21 @@ namespace t8::input::gamepad
         }
     }
 
-    bool down(const GamepadState &s, uint8_t i, uint8_t btn)
+    bool g_down(const GamepadState &s, uint8_t i, uint8_t btn)
     {
         if (i > 3)
             return false;
         return s.current[i].btn & btn;
     }
 
-    bool pressed(const GamepadState &s, uint8_t i, uint8_t btn)
+    bool g_pressed(const GamepadState &s, uint8_t i, uint8_t btn)
     {
         if (i > 3)
             return false;
         return !(s.previous[i].btn & btn) && (s.current[i].btn & btn);
     }
 
-    bool released(const GamepadState &s, uint8_t i, uint8_t btn)
+    bool g_released(const GamepadState &s, uint8_t i, uint8_t btn)
     {
         if (i > 3)
             return false;

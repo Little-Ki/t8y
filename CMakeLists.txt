@@ -26,8 +26,7 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/third_party)
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/include/text_editor)
-file(GLOB_RECURSE SRC_LIST ${PROJECT_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE SRC_LIST CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 target_sources(${EXECUTABLE_NAME} 
 PRIVATE 

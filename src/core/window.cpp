@@ -1,24 +1,19 @@
 #include "core/window.h"
 
-namespace t8::core::window
-{
+namespace t8::core {
 
-    bool init(WindowState &state, uint32_t width, uint32_t height, uint32_t pixel_size)
-    {
-        if (state.window)
-        {
+    bool wnd_init(WindowState &state, uint32_t width, uint32_t height, uint32_t pixel_size) {
+        if (state.window) {
             return true;
         }
 
-        if (!SDL_Init(SDL_INIT_VIDEO))
-        {
+        if (!SDL_Init(SDL_INIT_VIDEO)) {
             SDL_Log("SDL_Init failed: %s", SDL_GetError());
             return false;
         }
 
         state.window = SDL_CreateWindow("T8Y", width * pixel_size, height * pixel_size, SDL_WINDOW_OPENGL);
-        if (!state.window)
-        {
+        if (!state.window) {
             SDL_Log("Could not create a window: %s", SDL_GetError());
             return false;
         }
@@ -27,8 +22,7 @@ namespace t8::core::window
 
         state.renderer = SDL_CreateRenderer(state.window, nullptr);
 
-        if (!state.renderer)
-        {
+        if (!state.renderer) {
             SDL_Log("Create renderer failed: %s", SDL_GetError());
             return false;
         }
@@ -39,8 +33,7 @@ namespace t8::core::window
             SDL_TEXTUREACCESS_STREAMING,
             128, 128);
 
-        if (!state.renderer)
-        {
+        if (!state.renderer) {
             SDL_Log("Create texture failed: %s", SDL_GetError());
             return false;
         }
@@ -50,42 +43,33 @@ namespace t8::core::window
         return true;
     }
 
-    void quit(WindowState &state)
-    {
-        if (state.renderer)
-        {
+    void wnd_quit(WindowState &state) {
+        if (state.renderer) {
             SDL_DestroyRenderer(state.renderer);
             state.renderer = nullptr;
         }
-        if (state.window)
-        {
+        if (state.window) {
             SDL_DestroyWindow(state.window);
             state.window = nullptr;
         }
         SDL_Quit();
     }
 
-    void draw(WindowState &state, const uint32_t *pixels)
-    {
+    void wnd_draw(WindowState &state, const uint32_t *pixels) {
         SDL_RenderClear(state.renderer);
         SDL_UpdateTexture(state.texture, nullptr, pixels, 128 * sizeof(uint32_t));
         SDL_RenderTexture(state.renderer, state.texture, nullptr, nullptr);
         SDL_RenderPresent(state.renderer);
     }
 
-    void event(SDL_Event &event)
-    {
-        SDL_PollEvent(&event);
+    bool wnd_event(SDL_Event &event) {
+        return SDL_PollEvent(&event);
     }
 
-    void input(WindowState &state, bool enable)
-    {
-        if (enable)
-        {
+    void wnd_input(WindowState &state, bool enable) {
+        if (enable) {
             SDL_StartTextInput(state.window);
-        }
-        else
-        {
+        } else {
             SDL_StopTextInput(state.window);
         }
     }

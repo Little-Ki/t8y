@@ -1,11 +1,11 @@
 #include "input/mouse.h"
 
-namespace t8::input::mouse
+namespace t8::input
 {
-    void flush(MouseState &s)
+    void m_flush(MouseState &s)
     {
         for (auto i = 1; i <= 3; i++)
-            if (!down(s, i) && s.tracker[i - 1].focus)
+            if (!m_down(s, i) && s.tracker[i - 1].focus)
                 s.tracker[i - 1].focus = 0;
 
         for (auto &x : s.tracker)
@@ -17,7 +17,7 @@ namespace t8::input::mouse
         s.previous = s.current;
     }
 
-    void move(MouseState &s, int16_t x, int16_t y)
+    void m_move(MouseState &s, int16_t x, int16_t y)
     {
         s.dx += x - s.x;
         s.dy += y - s.y;
@@ -25,7 +25,7 @@ namespace t8::input::mouse
         s.y = y;
     }
 
-    void button(MouseState &s, uint8_t btn, bool down)
+    void m_button(MouseState &s, uint8_t btn, bool down)
     {
         if (down)
         {
@@ -37,17 +37,17 @@ namespace t8::input::mouse
         }
     }
 
-    void wheel(MouseState &s, int16_t z)
+    void m_wheel(MouseState &s, int16_t z)
     {
         s.z = z;
     }
 
-    bool pressed(const MouseState &s, uint8_t btn)
+    bool m_pressed(const MouseState &s, uint8_t btn)
     {
         return s.current & (0x1 << (btn - 1));
     }
 
-    bool clicked(MouseState &s, int x, int y, int w, int h, uint8_t btn)
+    bool m_clicked(MouseState &s, int x, int y, int w, int h, uint8_t btn)
     {
         if (btn & 0b11111100)
             return false;
@@ -56,22 +56,22 @@ namespace t8::input::mouse
         auto id = ++(tracker->index);
         auto px = s.x, py = s.y;
 
-        if (pressed(s, btn) && !tracker->focus)
+        if (m_pressed(s, btn) && !tracker->focus)
         {
-            if (inside(s, x, y, w, h))
+            if (m_inside(s, x, y, w, h))
                 tracker->focus = id;
         }
-        else if (tracker->focus == id && !down(s, btn))
+        else if (tracker->focus == id && !m_down(s, btn))
         {
             tracker->focus = 0;
-            if (inside(s, x, y, w, h))
+            if (m_inside(s, x, y, w, h))
                 return true;
         }
 
         return false;
     }
 
-    bool dragging(MouseState &s, int x, int y, int w, int h, uint8_t btn)
+    bool m_dragging(MouseState &s, int x, int y, int w, int h, uint8_t btn)
     {
         if (btn & 0b11111100)
             return false;
@@ -80,12 +80,12 @@ namespace t8::input::mouse
         auto id = ++(tracker->index);
         auto px = s.x, py = s.y;
 
-        if (pressed(s, btn) && !tracker->focus)
+        if (m_pressed(s, btn) && !tracker->focus)
         {
-            if (inside(s, x, y, w, h))
+            if (m_inside(s, x, y, w, h))
                 tracker->focus = id;
         }
-        else if (tracker->focus == id && down(s, btn) && inside(s, x, y, w, h))
+        else if (tracker->focus == id && m_down(s, btn) && m_inside(s, x, y, w, h))
         {
             return true;
         }
@@ -93,13 +93,13 @@ namespace t8::input::mouse
         return false;
     }
 
-    bool inside(const MouseState &s, int x, int y, int w, int h)
+    bool m_inside(const MouseState &s, int x, int y, int w, int h)
     {
         const auto px = s.x, py = s.y;
         return px >= x && py >= y && px < (x + w) && py < (y + h);
     }
 
-    bool down(const MouseState &s, uint8_t btn)
+    bool m_down(const MouseState &s, uint8_t btn)
     {
         return s.current & (1 << (btn - 1));
     }
