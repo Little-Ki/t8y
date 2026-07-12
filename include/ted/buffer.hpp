@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace t8::text_editor
+namespace t8::ted
 {
     class GapBuffer
     {

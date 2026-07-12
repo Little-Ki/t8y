@@ -1,7 +1,7 @@
 #pragma once
 #include <algorithm>
 
-namespace t8::text_editor {
+namespace t8::ted {
 
     struct EditSelection {
         size_t anchor = 0;

@@ -2,7 +2,7 @@
 #include <string>
 #include <stack>
 
-namespace t8::text_editor {
+namespace t8::ted {
 
     enum class EditType {
         Insert,
