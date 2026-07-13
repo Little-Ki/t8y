@@ -302,13 +302,13 @@ namespace t8::ted {
             return std::string(buffer.begin(), buffer.end());
         }
 
-        char get_char(size_t line, size_t column) {
+        char char_at(size_t line, size_t column) {
             const auto i = line_start(line);
             const auto j = line_start(line + 1);
             return (i + column < j) ? _buffer[i + column] : '\0';
         }
 
-        char get_char(size_t index) {
+        char char_at(size_t index) {
             return (index < _buffer.size()) ? _buffer[index] : '\0';
         }
     };

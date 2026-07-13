@@ -10,10 +10,10 @@ int main(int argc, char *argv[])
 {
     auto ctx = std::make_unique<AppContext>();
 
-    if (emu_init(*ctx))
+    if (emu_init(ctx.get()))
     {
-        emu_run(*ctx);
-        emu_quit(*ctx);
+        emu_run(ctx.get());
+        emu_quit(ctx.get());
     }
 
     return 0;

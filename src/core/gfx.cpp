@@ -5,10 +5,8 @@
 #include <algorithm>
 #include <iostream>
 
-namespace t8::core
-{
-    union bitfield_4
-    {
+namespace t8::core {
+    union bitfield_4 {
         uint8_t value;
         struct
         {
@@ -17,15 +15,13 @@ namespace t8::core
         };
     };
 
-    void gfx_reset_all(VirtualMemory &mem)
-    {
-        gfx_reset_palette(mem);
-        gfx_set_clip(mem);
-        gfx_set_offset(mem);
+    void gfx_reset(VirtualMemory *m) {
+        gfx_reset_palette(m);
+        gfx_clip(m);
+        gfx_camera(m);
     }
 
-    void gfx_set_clip(VirtualMemory &mem, int x, int y, int w, int h)
-    {
+    void gfx_clip(VirtualMemory *m, int x, int y, int w, int h) {
 
         auto l = std::clamp(x, 0, 128);
         auto r = std::clamp(x + w, 0, 128);
@@ -34,188 +30,161 @@ namespace t8::core
         if (l > r || t > b)
             return;
 
-        mem.view_clip[0] = static_cast<uint8_t>(l);
-        mem.view_clip[1] = static_cast<uint8_t>(t);
-        mem.view_clip[2] = static_cast<uint8_t>(r - l);
-        mem.view_clip[3] = static_cast<uint8_t>(b - t);
+        m->view_clip[0] = static_cast<uint8_t>(l);
+        m->view_clip[1] = static_cast<uint8_t>(t);
+        m->view_clip[2] = static_cast<uint8_t>(r - l);
+        m->view_clip[3] = static_cast<uint8_t>(b - t);
     }
 
-    void gfx_set_offset(VirtualMemory &mem, int8_t x, int8_t y)
-    {
-        mem.draw_offset[0] = x;
-        mem.draw_offset[1] = y;
+    void gfx_camera(VirtualMemory *m, int8_t x, int8_t y) {
+        m->draw_offset[0] = x;
+        m->draw_offset[1] = y;
     }
 
-    void gfx_clear(VirtualMemory &mem, uint8_t c)
-    {
+    void gfx_clear(VirtualMemory *m, uint8_t c) {
         c = (c & 0xF) | ((c & 0xF) << 4);
-        std::fill(mem.screen, mem.screen + sizeof(mem.screen), c);
+        std::fill(m->screen, m->screen + sizeof(m->screen), c);
     }
 
-    void gfx_set_trans(VirtualMemory &mem, uint8_t color, bool t)
-    {
-        if (t)
-        {
-            mem.palette_mask |= (1 << color);
-        }
-        else
-        {
-            mem.palette_mask &= ~static_cast<uint16_t>(1 < color);
+    void gfx_palt(VirtualMemory *m, uint8_t color, bool t) {
+        if (t) {
+            m->palette_mask |= (1 << color);
+        } else {
+            m->palette_mask &= ~static_cast<uint16_t>(1 < color);
         }
     }
 
-    void gfx_set_trans(VirtualMemory &mem, uint16_t t)
-    {
-        mem.palette_mask = t;
+    void gfx_palt(VirtualMemory *m, uint16_t t) {
+        m->palette_mask = t;
     }
 
-    void gfx_reset_palette(VirtualMemory &mem)
-    {
-        for (auto i = 0; i < 16; i++)
-        {
-            gfx_set_pmap(mem, i, i);
+    void gfx_reset_palette(VirtualMemory *m) {
+        for (auto i = 0; i < 16; i++) {
+            gfx_pal(m, i, i);
         }
     }
 
-    void gfx_set_pcolor(VirtualMemory &mem, uint8_t index, uint32_t c)
-    {
-        mem.palette[index & 0xF] = c;
+    void gfx_palc(VirtualMemory *m, uint8_t index, uint32_t c) {
+        m->palette[index & 0xF] = c;
     }
 
-    void gfx_set_pmap(VirtualMemory &mem, uint8_t n, uint8_t map)
-    {
+    void gfx_pal(VirtualMemory *m, uint8_t n, uint8_t map) {
         if (n & 0xF0)
             return;
-        auto buffer = reinterpret_cast<bitfield_4 *>(mem.palette_mapping);
+        auto buffer = reinterpret_cast<bitfield_4 *>(m->palette_mapping);
         auto field = &buffer[n >> 1];
         (n & 0x1) ? (field->lo = map) : (field->hi = map);
     }
 
-    uint8_t gfx_get_pmap(VirtualMemory &mem, uint8_t n)
-    {
+    uint8_t gfx_pal(VirtualMemory *m, uint8_t n) {
         if (n & 0xF0)
             return 0;
-        auto buffer = reinterpret_cast<bitfield_4 *>(mem.palette_mapping);
+        auto buffer = reinterpret_cast<bitfield_4 *>(m->palette_mapping);
         auto field = &buffer[n >> 1];
         return (n & 0x1) ? (field->lo) : (field->hi);
     }
 
-    void gfx_set_pixel(VirtualMemory &mem, int x, int y, uint8_t color)
-    {
-        x += mem.draw_offset[0];
-        y += mem.draw_offset[1];
-        if (x < mem.view_clip[0] ||
-            y < mem.view_clip[1] ||
-            x >= mem.view_clip[0] + mem.view_clip[2] ||
-            y >= mem.view_clip[1] + mem.view_clip[3])
+    void gfx_pset(VirtualMemory *m, int x, int y, uint8_t color) {
+        x += m->draw_offset[0];
+        y += m->draw_offset[1];
+        if (x < m->view_clip[0] ||
+            y < m->view_clip[1] ||
+            x >= m->view_clip[0] + m->view_clip[2] ||
+            y >= m->view_clip[1] + m->view_clip[3])
             return;
 
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return;
 
-        auto buffer = reinterpret_cast<bitfield_4 *>(mem.screen);
+        auto buffer = reinterpret_cast<bitfield_4 *>(m->screen);
         auto t = (y * 128 + x);
         auto field = &buffer[t >> 1];
-        if (!(mem.palette_mask & (1 << color)))
-        {
+        if (!(m->palette_mask & (1 << color))) {
             (t & 1) ? (field->lo = color) : (field->hi = color);
         }
     }
 
-    uint8_t gfx_get_pixel(VirtualMemory &mem, int x, int y)
-    {
+    uint8_t gfx_pget(VirtualMemory *m, int x, int y) {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return 0;
-        auto buffer = reinterpret_cast<bitfield_4 *>(mem.screen);
+        auto buffer = reinterpret_cast<bitfield_4 *>(m->screen);
         auto t = (y * 128 + x);
         auto field = &buffer[t >> 1];
         return (t & 1) ? (field->lo) : (field->hi);
     }
 
-    void gfx_set_sprite(VirtualMemory &mem, int x, int y, uint8_t color)
-    {
+    void gfx_sset(VirtualMemory *m, int x, int y, uint8_t color) {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return;
-        auto buffer = reinterpret_cast<bitfield_4 *>(mem.sprite);
+        auto buffer = reinterpret_cast<bitfield_4 *>(m->sprite);
         auto t = (y * 128 + x);
         auto field = &buffer[t >> 1];
         (t & 1) ? (field->lo = color) : (field->hi = color);
     }
 
-    uint8_t gfx_get_sprite(VirtualMemory &mem, int x, int y)
-    {
+    uint8_t gfx_sget(VirtualMemory *m, int x, int y) {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return 0;
-        auto buffer = reinterpret_cast<bitfield_4 *>(mem.sprite);
+        auto buffer = reinterpret_cast<bitfield_4 *>(m->sprite);
         auto t = (y * 128 + x);
         auto field = &buffer[t >> 1];
         return (t & 1) ? (field->lo) : (field->hi);
     }
 
-    void gfx_set_tilemap(VirtualMemory &mem, int x, int y, uint8_t n)
-    {
+    void gfx_mset(VirtualMemory *m, int x, int y, uint8_t n) {
         if (x < 0 || x >= 128 || y < 0 || y >= 128)
             return;
         auto i = (y * 128 + x);
-        mem.map[i] = n;
+        m->map[i] = n;
     }
 
-    uint8_t gfx_get_tilemap(VirtualMemory &mem, int x, int y)
-    {
+    uint8_t gfx_mget(VirtualMemory *m, int x, int y) {
         if (x < 0 || x >= 128 || y < 0 || y >= 128)
             return 0;
         auto i = (y * 128 + x);
-        return mem.map[i];
+        return m->map[i];
     }
 
-    void gfx_set_flags(VirtualMemory &mem, uint8_t n, uint8_t f)
-    {
-        mem.flags[n] = f;
+    void gfx_fset(VirtualMemory *m, uint8_t n, uint8_t f) {
+        m->flags[n] = f;
     }
 
-    uint8_t gfx_get_flags(VirtualMemory &mem, uint8_t n)
-    {
-        return mem.flags[n];
+    uint8_t gfx_fget(VirtualMemory *m, uint8_t n) {
+        return m->flags[n];
     }
 
-    void gfx_set_font(VirtualMemory &mem, int x, int y, bool value, bool custom)
-    {
+    void gfx_ftset(VirtualMemory *m, int x, int y, bool value, bool custom) {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return;
-        auto buffer = custom ? mem.custom_font : mem.default_font;
+        auto buffer = custom ? m->custom_font : m->default_font;
         auto t = (y * 128 + x);
         auto field = &buffer[t >> 3];
         value ? (*field |= (1 << (t & 0b111))) : (*field &= ~(1 << (t & 0b111)));
     }
 
-    bool gfx_get_font(VirtualMemory &mem, int x, int y, bool custom)
-    {
+    bool gfx_ftget(VirtualMemory *m, int x, int y, bool custom) {
         if (x < 0 || x > 128 || y < 0 || y > 128)
             return false;
-        auto buffer = custom ? mem.custom_font : mem.default_font;
+        auto buffer = custom ? m->custom_font : m->default_font;
         auto t = (y * 128 + x);
         auto field = &buffer[t >> 3];
         return *field & (1 << (t & 0b111));
     }
 
-    void gfx_draw_char(VirtualMemory &mem, uint8_t n, int x, int y, uint8_t color, bool custom)
-    {
+    void gfx_char(VirtualMemory *m, uint8_t n, int x, int y, uint8_t color, bool custom) {
         auto sprite_x = (n & 0xF) << 3;
         auto sprite_y = (n >> 4) << 3;
 
-        for (auto dy = 0; dy < 8; dy++)
-        {
-            for (auto dx = 0; dx < 8; dx++)
-            {
-                bool c = gfx_get_font(mem, sprite_x + dx, sprite_y + dy, custom);
+        for (auto dy = 0; dy < 8; dy++) {
+            for (auto dx = 0; dx < 8; dx++) {
+                bool c = gfx_ftget(m, sprite_x + dx, sprite_y + dy, custom);
                 if (c)
-                    gfx_set_pixel(mem, x + dx, y + dy, color);
+                    gfx_pset(m, x + dx, y + dy, color);
             }
         }
     }
 
-    void gfx_draw_line(VirtualMemory &mem, int x0, int y0, int x1, int y1, uint8_t color)
-    {
+    void gfx_line(VirtualMemory *m, int x0, int y0, int x1, int y1, uint8_t color) {
         auto dx = x1 - x0;
         auto dy = y1 - y0;
         auto fx = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
@@ -227,25 +196,18 @@ namespace t8::core
         auto delta = std::min(dx, dy) * 2;
         auto error = 0;
 
-        if (dx > dy)
-        {
-            for (; x != x1; x += fx)
-            {
-                gfx_set_pixel(mem, x, y, color);
-                if ((error += delta) > dx)
-                {
+        if (dx > dy) {
+            for (; x != x1; x += fx) {
+                gfx_pset(m, x, y, color);
+                if ((error += delta) > dx) {
                     y += fy;
                     error -= dx * 2;
                 }
             }
-        }
-        else
-        {
-            for (; y != y1; y += fy)
-            {
-                gfx_set_pixel(mem, x, y, color);
-                if ((error += delta) > dy)
-                {
+        } else {
+            for (; y != y1; y += fy) {
+                gfx_pset(m, x, y, color);
+                if ((error += delta) > dy) {
                     x += fx;
                     error -= dy * 2;
                 }
@@ -253,72 +215,57 @@ namespace t8::core
         }
     }
 
-    void gfx_draw_circle(VirtualMemory &mem, int xc, int yc, int r, uint8_t color, bool fill)
-    {
-        const auto put = [&](int xc, int yc, int x, int y)
-        {
-            gfx_set_pixel(mem, xc + x, yc + y, color);
-            gfx_set_pixel(mem, xc - x, yc + y, color);
-            gfx_set_pixel(mem, xc + x, yc - y, color);
-            gfx_set_pixel(mem, xc - x, yc - y, color);
-            gfx_set_pixel(mem, xc + y, yc + x, color);
-            gfx_set_pixel(mem, xc - y, yc + x, color);
-            gfx_set_pixel(mem, xc + y, yc - x, color);
-            gfx_set_pixel(mem, xc - y, yc - x, color);
+    void gfx_circ(VirtualMemory *m, int xc, int yc, int r, uint8_t color, bool fill) {
+        const auto put = [&](int xc, int yc, int x, int y) {
+            gfx_pset(m, xc + x, yc + y, color);
+            gfx_pset(m, xc - x, yc + y, color);
+            gfx_pset(m, xc + x, yc - y, color);
+            gfx_pset(m, xc - x, yc - y, color);
+            gfx_pset(m, xc + y, yc + x, color);
+            gfx_pset(m, xc - y, yc + x, color);
+            gfx_pset(m, xc + y, yc - x, color);
+            gfx_pset(m, xc - y, yc - x, color);
         };
 
         int x = 0, y = r;
         int d = 3 - 2 * r;
 
-        while (y >= x)
-        {
-            if (d > 0)
-            {
+        while (y >= x) {
+            if (d > 0) {
                 y--;
                 d = d + 4 * (x - y) + 10;
-            }
-            else
+            } else
                 d = d + 4 * x + 6;
             x++;
-            if (fill)
-            {
-                for (auto i = 0; i < r - x; i++)
-                {
+            if (fill) {
+                for (auto i = 0; i < r - x; i++) {
                     put(xc, yc, x, y + i);
                 }
-            }
-            else
-            {
+            } else {
                 put(xc, yc, x, y);
             }
         }
     }
 
-    void gfx_draw_rect(VirtualMemory &mem, int x, int y, int w, int h, uint8_t color, bool fill)
-    {
-        for (auto dx = 0; dx < w; dx += 1)
-        {
-            gfx_set_pixel(mem, x + dx, y, color);
-            gfx_set_pixel(mem, x + dx, y + h - 1, color);
+    void gfx_rect(VirtualMemory *m, int x, int y, int w, int h, uint8_t color, bool fill) {
+        for (auto dx = 0; dx < w; dx += 1) {
+            gfx_pset(m, x + dx, y, color);
+            gfx_pset(m, x + dx, y + h - 1, color);
         }
-        for (auto dy = 0; dy < h; dy += 1)
-        {
-            gfx_set_pixel(mem, x, y + dy, color);
-            gfx_set_pixel(mem, x + w - 1, y + dy, color);
+        for (auto dy = 0; dy < h; dy += 1) {
+            gfx_pset(m, x, y + dy, color);
+            gfx_pset(m, x + w - 1, y + dy, color);
         }
 
-        if (fill)
-        {
+        if (fill) {
             auto l = std::clamp(x + 1, 0, 128);
             auto r = std::clamp(x + w - 1, 0, 128);
             auto t = std::clamp(y + 1, 0, 128);
             auto b = std::clamp(y + h - 1, 0, 128);
 
-            for (auto y = t; y < b; y += 1)
-            {
-                for (auto x = l; x < r; x += 1)
-                {
-                    gfx_set_pixel(mem, x, y, color);
+            for (auto y = t; y < b; y += 1) {
+                for (auto x = l; x < r; x += 1) {
+                    gfx_pset(m, x, y, color);
                 }
             }
         }

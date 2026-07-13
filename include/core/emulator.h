@@ -6,9 +6,9 @@
 
 namespace t8::core
 {
-    bool emu_init(AppContext &ctx);
+    bool emu_init(AppContext *ctx);
 
-    void emu_run(AppContext &ctx);
+    void emu_run(AppContext *ctx);
 
-    void emu_quit(AppContext &ctx);
+    void emu_quit(AppContext *ctx);
 }
