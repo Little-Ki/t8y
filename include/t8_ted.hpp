@@ -1,13 +1,285 @@
 #pragma once
-#include "t8_text_editor_buffer.hpp"
-#include "t8_text_editor_record.hpp"
-#include "t8_text_editor_selection.hpp"
-#include <cmath>
+#include <string>
+#include <stack>
+#include <cassert>
+#include <vector>
 
-namespace t8::text_editor
+namespace t8::ted
 {
+    class GapBuffer
+    {
+    private:
+        static const size_t BASE_SIZE = 64;
 
-    class TextEditor
+        std::vector<char> _buffer;
+        size_t _gap_start, _gap_end;
+
+    private:
+        void ensure_gap(size_t size)
+        {
+            if (gap_size() >= size)
+                return;
+
+            const auto next_gap_size = size + 32ULL;
+            const auto expand_size = next_gap_size - gap_size();
+            const auto move_size = _buffer.size() - _gap_end;
+            const auto buffer_size = _buffer.size() + expand_size;
+
+            _buffer.resize(buffer_size);
+            if (move_size > 0)
+            {
+                std::memmove(&_buffer[_gap_end + expand_size], &_buffer[_gap_end], move_size);
+            }
+            _gap_end += expand_size;
+        }
+
+        size_t gap_size() const { return _gap_end - _gap_start; }
+
+    public:
+        GapBuffer() : _buffer(BASE_SIZE), _gap_start(0), _gap_end(BASE_SIZE) {};
+
+        size_t size() const { return _buffer.size() - gap_size(); }
+        size_t cursor() const { return _gap_start; }
+
+        void reset(const std::string &text)
+        {
+            size_t pos = BASE_SIZE;
+            _gap_start = 0;
+            _gap_end = BASE_SIZE;
+
+            _buffer.resize(text.size() + BASE_SIZE);
+            std::copy(text.begin(), text.end(), _buffer.begin() + BASE_SIZE);
+        }
+
+        bool empty() const
+        {
+            return size() == 0;
+        }
+
+        void set_cursor(size_t pos)
+        {
+            pos = std::min(pos, size());
+
+            if (pos > _gap_start)
+            {
+                std::memmove(&_buffer[_gap_start], &_buffer[_gap_end], pos - _gap_start);
+            }
+
+            if (pos < _gap_start)
+            {
+                std::memmove(&_buffer[_gap_end - (_gap_start - pos)], &_buffer[pos], _gap_start - pos);
+            }
+
+            const auto s = gap_size();
+            _gap_start = pos;
+            _gap_end = _gap_start + s;
+        }
+
+        void insert(char value)
+        {
+            ensure_gap(1);
+            _buffer[_gap_start++] = value;
+        }
+
+        void insert(const std::string &text)
+        {
+            ensure_gap(text.size());
+            std::copy(text.begin(), text.end(), _buffer.begin() + _gap_start);
+            _gap_start += text.size();
+        }
+
+        void clear()
+        {
+            _gap_start = 0;
+            _gap_end = _buffer.size();
+        }
+
+        bool erase_before(size_t count = 1)
+        {
+            count = std::min(count, _gap_start);
+
+            if (count == 0)
+                return false;
+
+            _gap_start -= count;
+            return count > 0;
+        }
+
+        bool erase_after(size_t count = 1)
+        {
+            count = std::min(count, _buffer.size() - _gap_end);
+
+            if (count == 0)
+                return false;
+
+            _gap_end += count;
+            return count > 0;
+        }
+
+        char operator[](size_t i) const
+        {
+            assert(i < size());
+            return i < _gap_start ? _buffer[i] : _buffer[i + gap_size()];
+        }
+
+        std::vector<char> to_buffer() const
+        {
+            std::vector<char> result;
+            result.reserve(size());
+            result.insert(result.end(), _buffer.begin(), _buffer.begin() + _gap_start);
+            result.insert(result.end(), _buffer.begin() + _gap_end, _buffer.end());
+            return result;
+        }
+    };
+
+    enum class EditType
+    {
+        Insert,
+        Delete
+    };
+
+    struct EditRecord
+    {
+        EditType type;
+        size_t pos;
+        bool backspace;
+        std::string text;
+    };
+
+    class EditRecorder
+    {
+    private:
+        std::stack<EditRecord> _undos;
+        std::stack<EditRecord> _redos;
+
+        bool _merging = true;
+
+    public:
+        bool can_undo() const { return !_undos.empty(); }
+        bool can_redo() const { return !_redos.empty(); }
+
+        EditRecord pop_undo()
+        {
+            auto e = _undos.top();
+            _undos.pop();
+            return e;
+        }
+
+        EditRecord pop_redo()
+        {
+            auto e = _redos.top();
+            _redos.pop();
+            return e;
+        }
+
+        void break_merge()
+        {
+            _merging = false;
+        }
+
+        void clear_redo()
+        {
+            while (!_redos.empty())
+                _redos.pop();
+        }
+
+        void clear_undo()
+        {
+            while (!_undos.empty())
+                _undos.pop();
+        }
+
+        void push_redo(EditRecord e)
+        {
+            _redos.push(std::move(e));
+        }
+
+        void push_undo(EditRecord e, bool from_redo = false)
+        {
+            if (!from_redo)
+                clear_redo();
+
+            if (!_merging || _undos.empty())
+            {
+                _undos.push(std::move(e));
+                _merging = true;
+                return;
+            }
+
+            auto &o = _undos.top();
+
+            if (o.type != e.type)
+            {
+                _undos.push(std::move(e));
+                return;
+            }
+
+            if (o.type == EditType::Insert)
+            {
+                if (e.pos == o.text.size() + o.pos)
+                {
+                    o.text.append(e.text);
+                }
+                else
+                {
+                    _undos.push(std::move(e));
+                }
+            }
+
+            if (o.type == EditType::Delete)
+            {
+                if (o.backspace != e.backspace)
+                {
+                    _undos.push(std::move(e));
+                }
+                else if (e.backspace && e.pos == o.pos - o.text.size())
+                {
+                    o.text.insert(0, e.text);
+                }
+                else if (!e.backspace && e.pos == o.pos)
+                {
+                    o.text.append(e.text);
+                }
+                else
+                {
+                    _undos.push(std::move(e));
+                }
+            }
+        }
+    };
+
+    struct EditSelection
+    {
+        size_t anchor = 0;
+        size_t cursor = 0;
+
+        bool empty() const
+        {
+            return anchor == cursor;
+        }
+
+        size_t start() const
+        {
+            return std::min(anchor, cursor);
+        }
+
+        size_t end() const
+        {
+            return std::max(anchor, cursor);
+        }
+
+        size_t size() const
+        {
+            return end() - start();
+        }
+
+        void collapse(size_t pos)
+        {
+            anchor = cursor = pos;
+        }
+    };
+
+    class Ted
     {
     private:
         GapBuffer _buffer;
