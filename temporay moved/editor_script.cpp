@@ -1,5 +1,5 @@
 #include "t8_scene_editor_script.h"
-#include "t8_constants.h"
+#include "constants.h"
 #include "t8_core_context.h"
 #include "t8_core_painter.h"
 #include "t8_input_keybd.h"

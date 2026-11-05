@@ -1,5 +1,5 @@
 #include "t8_scene_executor.h"
-#include "t8_constants.h"
+#include "constants.h"
 #include "t8_core_context.h"
 #include "t8_core_memory.h"
 #include "t8_core_painter.h"

@@ -7,7 +7,7 @@
 #include "input_keyboard.h"
 #include "input_gamepad.h"
 
-#include "t8_constants.h"
+#include "constants.h"
 
 #include <thread>
 
