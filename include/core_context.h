@@ -7,6 +7,8 @@
 #include "input_mouse.h"
 #include "input_gamepad.h"
 #include "input_keyboard.h"
+#include "input_keyboard.h"
+#include "utils_timer.hpp"
 
 namespace t8::core
 {
@@ -33,5 +35,7 @@ namespace t8::core
 
         std::queue<std::string> inputs;
         std::queue<Signal> signals;
+
+        utils::Timer timer;
     };
 }

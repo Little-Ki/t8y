@@ -13,13 +13,13 @@ namespace t8::core::window
         SDL_Texture *texture = nullptr;
     };
 
-    bool init(WindowState &state, uint32_t width, uint32_t height, uint32_t pixel_size);
+    bool init(WindowState *state, uint32_t width, uint32_t height, uint32_t pixel_size);
 
-    void quit(WindowState &state);
+    void quit(WindowState *state);
 
-    void draw(WindowState &state, const uint32_t *pixels);
+    void draw(WindowState *state, const uint32_t *pixels);
 
-    void event(SDL_Event &event);
+    void input(WindowState *state, bool enable);
 
-    void input(WindowState &state, bool enable);
+    bool event(SDL_Event &event);
 }

@@ -3,18 +3,19 @@
 #include <memory>
 
 #include "core_emulator.h"
+#include "core_window.h"
 
 using namespace t8::core;
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    t8::core::Emulator emulator;
+	Emulator emulator;
 
-    if (emulator.init())
-    {
-        emulator.run();
-        emulator.quit();
-    }
+	if (emulator.init())
+	{
+		emulator.run();
+		emulator.quit();
+	}
 
-    return 0;
+	return 0;
 }

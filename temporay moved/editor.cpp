@@ -3,7 +3,7 @@
 #include "t8_core_context.h"
 #include "t8_core_painter.h"
 #include "t8_input_gamepad.h"
-#include "t8_input_keybd.h"
+#include "t8_input_keyboard.h"
 #include "t8_input_mouse.h"
 #include "t8_utils_timer.h"
 
