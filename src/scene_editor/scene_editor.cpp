@@ -90,8 +90,6 @@ namespace t8::scene::editor
         {
             ctx->signals.push({SIGNAL_START_INPUT});
         }
-
-        ctx->timer.reset();
     }
 
     void leave(AppContext *ctx, EditorState *state)
