@@ -1,6 +1,7 @@
 #include "scene_console.h"
 #include "core_context.h"
 #include "core_gfx.h"
+#include "cartridge.h"
 
 #include "input_keyboard.h"
 
@@ -66,7 +67,7 @@ namespace t8::scene::console
         print(state, "Type help for help");
     }
 
-    static bool command(ConsoleState *state)
+    static bool command(AppContext *ctx, ConsoleState *state)
     {
         if (state->input.empty())
             return false;
@@ -103,8 +104,8 @@ namespace t8::scene::console
 
         if (str_equals(payload[0], "load") && payload.size() > 1)
         {
-            // if (!load_cart(payload[1]))
-            //     print(state, "Failed to load cart", false, 3);
+            if (!cartridge::load(payload[1], ctx))
+                print(state, "Failed to load cart", false, 3);
             return true;
         }
 
@@ -157,7 +158,7 @@ namespace t8::scene::console
             keyboard::pressed(ctx->keyboard, SCANCODE_ENTER))
         {
             print(state, state->input, true, 1);
-            if (command(state))
+            if (command(ctx, state))
                 if (state->history.empty() || state->history.back() != state->input)
                 {
                     state->history.push_back(state->input);
@@ -355,8 +356,8 @@ namespace t8::scene::console
         if (state->records.empty())
         {
             state->records.push_back({0,
-                                     measure_height(prefix ? 8 : 0, text),
-                                     prefix, color, text});
+                                      measure_height(prefix ? 8 : 0, text),
+                                      prefix, color, text});
         }
         else
         {
@@ -364,8 +365,8 @@ namespace t8::scene::console
             int front_height = record.front_height + record.height;
 
             state->records.push_back({front_height,
-                                     measure_height(prefix ? 8 : 0, text),
-                                     prefix, color, text});
+                                      measure_height(prefix ? 8 : 0, text),
+                                      prefix, color, text});
         }
     }
 }
