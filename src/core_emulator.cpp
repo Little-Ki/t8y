@@ -18,10 +18,12 @@ using namespace t8::input;
 namespace t8::core
 {
 	Emulator::Emulator() : _ctx(std::make_unique<AppContext>()),
-		_window(std::make_unique<WindowState>()),
-		_buffer(std::make_unique<uint32_t[]>(128 * 128)),
-		_console(std::make_unique<ConsoleState>()),
-		_scene(0)
+						   _window(std::make_unique<WindowState>()),
+						   _buffer(std::make_unique<uint32_t[]>(128 * 128)),
+						   _console(std::make_unique<ConsoleState>()),
+						   _editor(std::make_unique<EditorState>()),
+						   _executor(std::make_unique<ExecutorState>()),
+						   _scene(0)
 	{
 	}
 
@@ -44,11 +46,12 @@ namespace t8::core
 	{
 
 		SDL_Event event;
-		auto& timer = _ctx->timer;
+		auto &timer = _ctx->timer;
 
 		while (true)
 		{
-			while (window::event(event)) {
+			while (window::event(event))
+			{
 				if (event.type == SDL_EVENT_QUIT)
 				{
 					return;
@@ -99,6 +102,14 @@ namespace t8::core
 		{
 			scene::console::update(_ctx.get(), _console.get());
 		}
+		if (_scene == SCENE_ID_EDITOR)
+		{
+			scene::editor::update(_ctx.get(), _editor.get());
+		}
+		if (_scene == SCENE_ID_EXECUTOR)
+		{
+			scene::executor::update(_ctx.get(), _executor.get());
+		}
 	}
 
 	void Emulator::scene_draw()
@@ -106,6 +117,14 @@ namespace t8::core
 		if (_scene == SCENE_ID_CONSOLE)
 		{
 			scene::console::draw(_ctx.get(), _console.get());
+		}
+		if (_scene == SCENE_ID_EDITOR)
+		{
+			scene::editor::draw(_ctx.get(), _editor.get());
+		}
+		if (_scene == SCENE_ID_EXECUTOR)
+		{
+			scene::executor::draw(_ctx.get(), _executor.get());
 		}
 	}
 
@@ -115,6 +134,14 @@ namespace t8::core
 		{
 			scene::console::enter(_ctx.get(), _console.get());
 		}
+		if (_scene == SCENE_ID_EDITOR)
+		{
+			scene::editor::enter(_ctx.get(), _editor.get());
+		}
+		if (_scene == SCENE_ID_EXECUTOR)
+		{
+			scene::executor::enter(_ctx.get(), _executor.get());
+		}
 	}
 
 	void Emulator::scene_leave()
@@ -123,6 +150,14 @@ namespace t8::core
 		{
 			scene::console::leave(_ctx.get(), _console.get());
 		}
+		if (_scene == SCENE_ID_EDITOR)
+		{
+			scene::editor::leave(_ctx.get(), _editor.get());
+		}
+		if (_scene == SCENE_ID_EXECUTOR)
+		{
+			scene::executor::leave(_ctx.get(), _executor.get());
+		}
 	}
 
 	void Emulator::scene_swap(uint16_t next)
@@ -130,6 +165,7 @@ namespace t8::core
 		scene_leave();
 		_scene = next;
 		scene_enter();
+		_ctx->timer.reset();
 	}
 
 	void Emulator::setup_fonts()
@@ -195,7 +231,7 @@ namespace t8::core
 		}
 	}
 
-	void Emulator::handle_event(const SDL_Event& event)
+	void Emulator::handle_event(const SDL_Event &event)
 	{
 
 		switch (event.type)
@@ -229,11 +265,11 @@ namespace t8::core
 		}
 	}
 
-	void Emulator::handle_mouse(const SDL_Event& event)
+	void Emulator::handle_mouse(const SDL_Event &event)
 	{
 		if (event.type == SDL_EVENT_MOUSE_MOTION)
 		{
-			const auto& i = event.motion;
+			const auto &i = event.motion;
 			mouse::move(
 				_ctx->mouse,
 				static_cast<int16_t>(i.x / _pixel_size),
@@ -242,29 +278,29 @@ namespace t8::core
 
 		if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
 		{
-			const auto& i = event.button;
+			const auto &i = event.button;
 			mouse::button(_ctx->mouse, i.button, true);
 		}
 
 		if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
 		{
-			const auto& i = event.button;
+			const auto &i = event.button;
 			mouse::button(_ctx->mouse, i.button, false);
 		}
 
 		if (event.type == SDL_EVENT_MOUSE_WHEEL)
 		{
-			const auto& i = event.wheel;
+			const auto &i = event.wheel;
 			mouse::wheel(_ctx->mouse, static_cast<int8_t>(i.y));
 		}
 	}
 
-	void Emulator::handle_keybd(const SDL_Event& event)
+	void Emulator::handle_keybd(const SDL_Event &event)
 	{
 		if (event.type == SDL_EVENT_KEY_DOWN ||
 			event.type == SDL_EVENT_KEY_UP)
 		{
-			const auto& i = event.key;
+			const auto &i = event.key;
 			if (i.scancode > 255)
 				return;
 
@@ -272,7 +308,7 @@ namespace t8::core
 		}
 	}
 
-	void Emulator::handle_gamepad(const SDL_Event& event)
+	void Emulator::handle_gamepad(const SDL_Event &event)
 	{
 		if (event.type == SDL_EVENT_GAMEPAD_ADDED)
 		{
@@ -287,7 +323,7 @@ namespace t8::core
 		if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN ||
 			event.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
 		{
-			const auto& i = event.gbutton;
+			const auto &i = event.gbutton;
 			gamepad::button(_ctx->gamepad, i.which, i.button, event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN);
 		}
 	}

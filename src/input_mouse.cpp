@@ -44,7 +44,7 @@ namespace t8::input::mouse
 
     bool pressed(const MouseState &s, uint8_t btn)
     {
-        return s.current & (0x1 << (btn - 1));
+        return (s.current & (0x1 << (btn - 1))) && !(s.previous & (0x1 << (btn - 1)));
     }
 
     bool clicked(MouseState &s, int x, int y, int w, int h, uint8_t btn)
@@ -101,7 +101,7 @@ namespace t8::input::mouse
 
     bool down(const MouseState &s, uint8_t btn)
     {
-        return s.current & (1 << (btn - 1));
+        return s.current & (0x1 << (btn - 1));
     }
 
 }

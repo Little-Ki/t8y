@@ -6,11 +6,15 @@
 #include "core_context.h"
 #include "core_window.h"
 #include "scene_console.h"
+#include "scene_executor.h"
+#include "scene_editor/scene_editor.h"
 
 namespace t8::core
 {
 	using namespace t8::core::window;
 	using namespace t8::scene::console;
+	using namespace t8::scene::editor;
+	using namespace t8::scene::executor;
 
 	class Emulator
 	{
@@ -43,6 +47,8 @@ namespace t8::core
 		std::unique_ptr<uint32_t[]> _buffer;
 		std::unique_ptr<WindowState> _window;
 		std::unique_ptr<ConsoleState> _console;
+		std::unique_ptr<EditorState> _editor;
+		std::unique_ptr<ExecutorState> _executor;
 
 		uint32_t _pixel_size = 3;
 		uint16_t _scene;

@@ -2,9 +2,7 @@
 #include "core_context.h"
 #include "core_gfx.h"
 
-#include "input_gamepad.h"
 #include "input_keyboard.h"
-#include "input_mouse.h"
 
 #include "utils_algo.h"
 

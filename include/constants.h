@@ -30,6 +30,8 @@ namespace t8 {
     constexpr auto SCANCODE_R = SDL_SCANCODE_R;
     constexpr auto SCANCODE_Y = SDL_SCANCODE_Y;
     constexpr auto SCANCODE_Z = SDL_SCANCODE_Z;
+    constexpr auto SCANCODE_LSHIFT = SDL_SCANCODE_LSHIFT;
+    constexpr auto SCANCODE_RSHIFT = SDL_SCANCODE_RSHIFT;
 
     constexpr auto EDITOR_PENCIL = 1;
     constexpr auto EDITOR_STRAW = 2;

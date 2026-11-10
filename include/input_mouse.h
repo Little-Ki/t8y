@@ -15,7 +15,7 @@ namespace t8::input::mouse
         uint8_t current{0};
         uint8_t previous{0};
         int16_t dx{0}, dy{0};
-        MouseTracker tracker[3];
+        MouseTracker tracker[3]{ 0 };
     };
 
     void flush(MouseState &s);

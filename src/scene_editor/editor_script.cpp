@@ -1,30 +1,18 @@
-#include "t8_scene_editor_script.h"
+#include "editor_script.h"
+#include "core_context.h"
+#include "core_gfx.h"
+
+#include "input_mouse.h"
+#include "input_keyboard.h"
+
 #include "constants.h"
-#include "t8_core_context.h"
-#include "t8_core_painter.h"
-#include "t8_input_keyboard.h"
-#include "t8_input_mouse.h"
-#include "t8_utils_timer.h"
 
-#include "t8_text_editor.hpp"
-
-using namespace t8::core;
-using namespace t8::utils;
 using namespace t8::input;
 
-namespace t8::scene
+namespace t8::scene::editor::script
 {
-    struct EditorState
-    {
-        int scroll_x = 0;
-        int scroll_y = 0;
-        bool dragging = false;
-        t8::text_editor::TextEditor editor;
-    };
 
-    static EditorState state;
-
-    size_t editor_script_edit_visual_column(size_t line, size_t cursor)
+    static size_t visual_column(EditorState &state, size_t line, size_t cursor)
     {
         if (line < 0 || line >= state.editor.line_count())
             return 0;
@@ -44,7 +32,7 @@ namespace t8::scene
         return result;
     }
 
-    void editor_script_edit_cursor_lifting(size_t next_line, size_t visual_column, bool collapse = true)
+    static void cursor_lifting(EditorState &state, size_t next_line, size_t visual_column, bool collapse = true)
     {
         if (next_line < 0 || next_line >= state.editor.line_count())
             return;
@@ -75,15 +63,19 @@ namespace t8::scene
             state.editor.set_cursor(line_start + col);
     }
 
-    void update_script_editor()
+    void update(AppContext *ctx, EditorState &state)
     {
+
         auto auto_scroll = true;
         auto cursor = state.editor.cursor();
+        auto only_ctrl = !keyboard::alt(ctx->keyboard) && !keyboard::shift(ctx->keyboard) && keyboard::ctrl(ctx->keyboard);
+        auto without_ctrls = !keyboard::alt(ctx->keyboard) && !keyboard::shift(ctx->keyboard) && !keyboard::ctrl(ctx->keyboard);
+        auto is_shift = keyboard::down(ctx->keyboard, SCANCODE_LSHIFT) || keyboard::down(ctx->keyboard, SCANCODE_RSHIFT);
 
-        if (!ctx_inputs().empty())
+        if (!ctx->inputs.empty())
         {
-            const auto text = ctx_inputs().front();
-            ctx_inputs().pop();
+            const auto text = ctx->inputs.front();
+            ctx->inputs.pop();
 
             for (const auto &ch : text)
                 if (ch & 0x80)
@@ -93,84 +85,78 @@ namespace t8::scene
         }
         else
         {
-            if (keybd_triggered(SCANCODE_ENTER) ||
-                keybd_triggered(SCANCODE_RETURN))
+            if (keyboard::triggered(ctx->keyboard, SCANCODE_ENTER) ||
+                keyboard::triggered(ctx->keyboard, SCANCODE_RETURN))
             {
                 state.editor.insert('\n');
             }
-            else if (keybd_triggered(SCANCODE_BACKSPACE))
+            else if (keyboard::triggered(ctx->keyboard, SCANCODE_BACKSPACE))
             {
                 state.editor.erase_before();
             }
-            else if (keybd_triggered(SCANCODE_DELETE))
+            else if (keyboard::triggered(ctx->keyboard, SCANCODE_DELETE))
             {
                 state.editor.erase_after();
             }
-            else if (keybd_triggered(SCANCODE_UP))
+            else if (keyboard::triggered(ctx->keyboard, SCANCODE_UP))
             {
                 const auto cursor = state.editor.cursor();
                 const auto line = state.editor.line_index(cursor);
                 if (line > 0)
                 {
-                    const auto col = editor_script_edit_visual_column(line, cursor);
-                    editor_script_edit_cursor_lifting(line - 1, col);
+                    const auto col = visual_column(state, line, cursor);
+                    cursor_lifting(state, line - 1, col, !is_shift);
                 }
             }
-            else if (keybd_triggered(SCANCODE_DOWN))
+            else if (keyboard::triggered(ctx->keyboard, SCANCODE_DOWN))
             {
                 const auto cursor = state.editor.cursor();
                 const auto line = state.editor.line_index(cursor);
                 if (line < state.editor.line_count() - 1)
                 {
-                    const auto col = editor_script_edit_visual_column(line, cursor);
-                    editor_script_edit_cursor_lifting(line + 1, col);
+                    const auto col = visual_column(state, line, cursor);
+                    cursor_lifting(state, line + 1, col, !is_shift);
                 }
             }
-            else if (keybd_triggered(SCANCODE_LEFT))
+            else if (keyboard::triggered(ctx->keyboard, SCANCODE_LEFT))
             {
                 if (cursor > 0)
                 {
-                    state.editor.collapse(cursor - 1);
+                    if (is_shift)
+                        state.editor.set_cursor(cursor - 1);
+                    else
+                        state.editor.collapse(cursor - 1);
                 }
             }
-            else if (keybd_triggered(SCANCODE_RIGHT))
+            else if (keyboard::triggered(ctx->keyboard, SCANCODE_RIGHT))
             {
-                state.editor.collapse(cursor + 1);
+                if (is_shift)
+                    state.editor.set_cursor(cursor + 1);
+                else
+                    state.editor.collapse(cursor + 1);
             }
-            else if (keybd_pressed(SCANCODE_A))
+            else if (keyboard::pressed(ctx->keyboard, SCANCODE_A) && only_ctrl)
             {
-                if (!keybd_alt() && !keybd_shift() && keybd_ctrl())
-                {
-                    state.editor.select_all();
-                }
+                state.editor.select_all();
             }
-            else if (keybd_pressed(SCANCODE_Z))
+            else if (keyboard::pressed(ctx->keyboard, SCANCODE_Z) && only_ctrl)
             {
-                if (!keybd_alt() && !keybd_shift() && keybd_ctrl())
-                {
-                    state.editor.undo();
-                }
+                state.editor.undo();
             }
-            else if (keybd_pressed(SCANCODE_Y))
+            else if (keyboard::pressed(ctx->keyboard, SCANCODE_Y) && only_ctrl)
             {
-                if (!keybd_alt() && !keybd_shift() && keybd_ctrl())
-                {
-                    state.editor.redo();
-                }
+                state.editor.redo();
             }
-            else if (keybd_pressed(SCANCODE_TAB))
+            else if (keyboard::pressed(ctx->keyboard, SCANCODE_TAB) && without_ctrls)
             {
-                if (!keybd_alt() && !keybd_shift() && !keybd_ctrl())
-                {
-                    state.editor.insert("\t");
-                }
+                state.editor.insert("\t");
             }
-            else if (mouse_inside(8, 11, 120, 128) && mouse_z() != 0)
+            else if (mouse::inside(ctx->mouse, 8, 11, 120, 128) && ctx->mouse.z != 0)
             {
                 auto min_y = 0;
                 auto max_y = std::max(0, static_cast<int>(state.editor.line_count()) - 14);
 
-                if (mouse_z() < 0)
+                if (ctx->mouse.z < 0)
                 {
                     state.scroll_y = std::clamp(state.scroll_y + 1, min_y, max_y);
                 }
@@ -186,10 +172,10 @@ namespace t8::scene
             }
         }
 
-        if (mouse_inside(0, 11, 128, 128) || state.dragging)
+        if (mouse::inside(ctx->mouse, 0, 11, 128, 128) || state.dragging)
         {
-            const auto local_x = mouse_x() - 8 + state.scroll_x * 4;
-            const auto local_y = mouse_y() - 11 + state.scroll_y * 8;
+            const auto local_x = ctx->mouse.x - 8 + state.scroll_x * 4;
+            const auto local_y = ctx->mouse.y - 11 + state.scroll_y * 8;
 
             auto line = local_y / 8;
 
@@ -227,13 +213,13 @@ namespace t8::scene
                 cursor_index = line_start + max_size;
             }
 
-            if (mouse_pressed(1))
+            if (mouse::pressed(ctx->mouse, 1))
             {
                 state.editor.collapse(cursor_index);
                 state.dragging = true;
                 auto_scroll = true;
             }
-            else if (mouse_down(1))
+            else if (mouse::down(ctx->mouse, 1))
             {
                 state.editor.set_cursor(cursor_index);
                 auto_scroll = true;
@@ -274,17 +260,17 @@ namespace t8::scene
         }
     }
 
-    void draw_script_editor()
+    void draw(AppContext *ctx, EditorState &state)
     {
-        painter_rect(0, 11, 8, 117, 14, true);
-        painter_rect(8, 11, 120, 117, 15, true);
+        gfx::draw_rect(ctx->memory, 0, 11, 8, 117, 14, true);
+        gfx::draw_rect(ctx->memory, 8, 11, 120, 117, 15, true);
 
         const auto sel_start = state.editor.sel_start();
         const auto sel_end = state.editor.sel_end();
         const auto cursor = state.editor.cursor();
 
-        painter_camera(8, 11);
-        painter_clip(8, 11, 120, 117);
+        gfx::set_offset(ctx->memory, 8, 11);
+        gfx::set_clip(ctx->memory, 8, 11, 120, 117);
 
         auto line_count = state.editor.line_count();
         auto above = state.scroll_y;
@@ -302,11 +288,11 @@ namespace t8::scene
             {
                 const auto ch = state.editor.get_char(line_start + col);
                 const auto current_index = line_start + col;
-                if ((timer_ticks() >> 5) % 2 && current_index == cursor)
-                    painter_rect(x, y, 1, 8, 3, true);
+                if ((ctx->timer.ticks() >> 5) % 2 && current_index == cursor)
+                    gfx::draw_rect(ctx->memory, x, y, 1, 8, 3, true);
 
                 if (current_index >= sel_start && current_index < sel_end && ch != '\n')
-                    painter_rect(x, y, ch == '\t' ? 8 : 4, 8, 3, true);
+                    gfx::draw_rect(ctx->memory, x, y, ch == '\t' ? 8 : 4, 8, 3, true);
 
                 if (ch == '\t')
                 {
@@ -314,30 +300,19 @@ namespace t8::scene
                 }
                 else if (ch != '\n')
                 {
-                    painter_char(ch, x, y, 1);
+                    gfx::draw_char(ctx->memory, ch, x, y, 1);
                     x += 4;
                 }
             }
 
-            if ((timer_ticks() >> 5) % 2 && line == below - 1 && line_start + line_size == cursor)
-                painter_rect(x, y, 1, 8, 3, true);
+            if ((ctx->timer.ticks() >> 5) % 2 && line == below - 1 && line_start + line_size == cursor)
+                gfx::draw_rect(ctx->memory, x, y, 1, 8, 3, true);
 
             x = -state.scroll_x * 4;
             y += 8;
         }
 
-        painter_camera();
-        painter_clip();
+        gfx::set_offset(ctx->memory);
+        gfx::set_clip(ctx->memory);
     }
-
-    void script_editor_set_script(const std::string &script)
-    {
-        state.editor.reset(script);
-    }
-
-    std::string script_editor_get_script()
-    {
-        return state.editor.to_string();
-    }
-
 }
