@@ -2,15 +2,14 @@
 #include "core_context.h"
 
 #include <fstream>
+#include <iomanip>
 #include <regex>
 #include <sstream>
 
 #include "constants.h"
 
-namespace t8::cartridge
-{
-    static uint8_t hex2num(char c)
-    {
+namespace t8::cartridge {
+    static uint8_t hex2num(char c) {
         if (c >= '0' && c <= '9')
             return c - '0';
         if (c >= 'a' && c <= 'f')
@@ -25,45 +24,37 @@ namespace t8::cartridge
         const std::string &file_content,
         uint8_t *raw,
         size_t stride,
-        size_t rows)
-    {
+        size_t rows) {
         std::regex line_regex(R"(--\s*(\d+):([0-9a-fA-F]+))");
         std::regex block_regex(pattern);
         std::smatch block_match;
 
-        if (std::regex_search(file_content, block_match, block_regex) && block_match.size() > 1)
-        {
+        if (std::regex_search(file_content, block_match, block_regex) && block_match.size() > 1) {
             std::stringstream ss(block_match[1].str());
             std::string line;
 
-            while (std::getline(ss, line))
-            {
+            while (std::getline(ss, line)) {
                 std::smatch line_match;
-                if (std::regex_search(line, line_match, line_regex))
-                {
+                if (std::regex_search(line, line_match, line_regex)) {
                     int row = std::stoi(line_match[1].str());
                     std::string data_str = line_match[2].str();
 
-                    if (row >= 0 && row < static_cast<int>(rows))
-                    {
-                        for (size_t i = 0; i < data_str.length(); i += 2)
-                        {
+                    if (row >= 0 && row < static_cast<int>(rows)) {
+                        for (size_t i = 0; i < data_str.length(); i += 2) {
                             size_t offset = i / 2;
                             if (offset >= stride)
                                 break;
-                            uint8_t low = hex2num(data_str[i]);
-                            uint8_t high = (i + 1 < data_str.length()) ? hex2num(data_str[i + 1]) : 0;
+                            uint8_t high = hex2num(data_str[i]);
+                            uint8_t low = (i + 1 < data_str.length()) ? hex2num(data_str[i + 1]) : 0;
                             raw[stride * row + offset] = (high << 4) | (low & 0x0F);
                         }
                     }
                 }
             }
         }
-
     }
 
-    bool load(const std::string &name, AppContext *ctx)
-    {
+    bool load(const std::string &name, AppContext *ctx) {
         std::ifstream ifs(name, std::ios::in | std::ios::binary);
         std::stringstream buffer;
 
@@ -87,8 +78,7 @@ namespace t8::cartridge
         std::regex clean_regex(R"(--\s*<(TILES|MAP|FONT)>[\s\S]*?--\s*</\1>\s*)");
         std::string pure_code = std::regex_replace(content, clean_regex, "");
         size_t end = pure_code.find_last_not_of(" \t\n\r\f\v");
-        if (end != std::string::npos)
-        {
+        if (end != std::string::npos) {
             pure_code = pure_code.substr(0, end + 1);
         }
 
@@ -101,9 +91,57 @@ namespace t8::cartridge
         return true;
     }
 
-    bool save(const std::string &name, const AppContext *ctx)
-    {
+    static bool is_empty_raw(const uint8_t *raw, size_t stride) {
+        for (auto i = 0; i < stride; i += 1) {
+            if (raw[i] != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-        return false;
+    static void write_block(
+        const std::string &tag,
+        std::ofstream &stream,
+        const uint8_t *raw,
+        size_t stride,
+        size_t rows) {
+        const static char *hex_digits = "0123456789abcdef";
+
+        if (is_empty_raw(raw, stride * rows))
+            return;
+
+        stream << "-- <" << tag << ">\n";
+        for (auto row = 0; row < rows; row += 1) {
+            const uint8_t *row_ptr = &raw[row * stride];
+
+            if (!is_empty_raw(row_ptr, stride)) {
+                stream << "-- " << std::setw(3) << std::setfill('0') << row << ":";
+                for (auto i = 0; i < stride; i += 1) {
+                    const auto value = row_ptr[i];
+                    stream << hex_digits[(value >> 4) & 0x0F];
+                    stream << hex_digits[value & 0x0F];
+                }
+                stream << "\n";
+            }
+        }
+        stream << "-- </" << tag << ">\n";
+    }
+
+    bool save(const std::string &name, const AppContext *ctx) {
+        std::ofstream ofs(name, std::ios::out | std::ios::binary | std::ios::trunc);
+
+        if (!ofs.is_open())
+            return false;
+
+        ofs << ctx->script << "\n\n";
+
+        const auto mem = ctx->memory;
+
+        write_block("TILES", ofs, mem->sprite, 64, 128);
+        write_block("MAP", ofs, mem->map, 128, 128);
+        write_block("FONT", ofs, mem->custom_font, 16, 128);
+
+        return true;
     }
 }
