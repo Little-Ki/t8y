@@ -16,7 +16,10 @@ namespace t8::core::gfx
 
     void reset_all(VirtualMemory* mem)
     {
-        reset_palette(mem);
+        for (auto i = 0; i < 16; i++)
+        {
+            set_palette_map(mem, i, i);
+        }
         set_clip(mem);
         set_offset(mem);
     }
@@ -57,7 +60,7 @@ namespace t8::core::gfx
         }
         else
         {
-            mem->palette_mask &= ~static_cast<uint16_t>(1 < color);
+            mem->palette_mask &= ~static_cast<uint16_t>(1 << color);
         }
     }
 
@@ -66,20 +69,12 @@ namespace t8::core::gfx
         mem->palette_mask = t;
     }
 
-    void reset_palette(VirtualMemory* mem)
-    {
-        for (auto i = 0; i < 16; i++)
-        {
-            set_pmap(mem, i, i);
-        }
-    }
-
-    void set_pcolor(VirtualMemory* mem, uint8_t index, uint32_t c)
+    void set_palette(VirtualMemory* mem, uint8_t index, uint32_t c)
     {
         mem->palette[index & 0xF] = c;
     }
 
-    void set_pmap(VirtualMemory* mem, uint8_t n, uint8_t map)
+    void set_palette_map(VirtualMemory* mem, uint8_t n, uint8_t map)
     {
         if (n & 0xF0)
             return;
@@ -88,7 +83,7 @@ namespace t8::core::gfx
         (n & 0x1) ? (field->lo = map) : (field->hi = map);
     }
 
-    uint8_t get_pmap(VirtualMemory* mem, uint8_t n)
+    uint8_t get_palette_map(VirtualMemory* mem, uint8_t n)
     {
         if (n & 0xF0)
             return 0;

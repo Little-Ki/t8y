@@ -68,7 +68,7 @@ namespace t8::core {
             for (auto y = 0; y < 128; y++) {
                 for (auto x = 0; x < 128; x++) {
                     auto n = gfx::get_pixel(_ctx->memory, x, y);
-                    n = gfx::get_pmap(_ctx->memory, n);
+                    n = gfx::get_palette_map(_ctx->memory, n);
                     *(p++) = _ctx->memory->palette[n];
                 }
             }
@@ -145,22 +145,22 @@ namespace t8::core {
     }
 
     void Emulator::setup_palette() {
-        gfx::set_pcolor(_ctx->memory, 0, RGBA(0, 0, 0, 255));
-        gfx::set_pcolor(_ctx->memory, 1, RGBA(250, 250, 250, 255));
-        gfx::set_pcolor(_ctx->memory, 2, RGBA(190, 190, 190, 255));
-        gfx::set_pcolor(_ctx->memory, 3, RGBA(200, 60, 90, 255));
-        gfx::set_pcolor(_ctx->memory, 4, RGBA(240, 130, 90, 255));
-        gfx::set_pcolor(_ctx->memory, 5, RGBA(250, 200, 120, 255));
-        gfx::set_pcolor(_ctx->memory, 6, RGBA(60, 180, 100, 255));
-        gfx::set_pcolor(_ctx->memory, 7, RGBA(40, 110, 120, 255));
-        gfx::set_pcolor(_ctx->memory, 8, RGBA(40, 70, 150, 255));
-        gfx::set_pcolor(_ctx->memory, 9, RGBA(150, 60, 150, 255));
-        gfx::set_pcolor(_ctx->memory, 10, RGBA(250, 120, 170, 255));
-        gfx::set_pcolor(_ctx->memory, 11, RGBA(250, 200, 170, 255));
-        gfx::set_pcolor(_ctx->memory, 12, RGBA(130, 140, 160, 255));
-        gfx::set_pcolor(_ctx->memory, 13, RGBA(150, 180, 190, 255));
-        gfx::set_pcolor(_ctx->memory, 14, RGBA(90, 110, 130, 255));
-        gfx::set_pcolor(_ctx->memory, 15, RGBA(50, 60, 90, 255));
+        gfx::set_palette(_ctx->memory, 0, RGBA(0, 0, 0, 255));
+        gfx::set_palette(_ctx->memory, 1, RGBA(250, 250, 250, 255));
+        gfx::set_palette(_ctx->memory, 2, RGBA(190, 190, 190, 255));
+        gfx::set_palette(_ctx->memory, 3, RGBA(200, 60, 90, 255));
+        gfx::set_palette(_ctx->memory, 4, RGBA(240, 130, 90, 255));
+        gfx::set_palette(_ctx->memory, 5, RGBA(250, 200, 120, 255));
+        gfx::set_palette(_ctx->memory, 6, RGBA(60, 180, 100, 255));
+        gfx::set_palette(_ctx->memory, 7, RGBA(40, 110, 120, 255));
+        gfx::set_palette(_ctx->memory, 8, RGBA(40, 70, 150, 255));
+        gfx::set_palette(_ctx->memory, 9, RGBA(150, 60, 150, 255));
+        gfx::set_palette(_ctx->memory, 10, RGBA(250, 120, 170, 255));
+        gfx::set_palette(_ctx->memory, 11, RGBA(250, 200, 170, 255));
+        gfx::set_palette(_ctx->memory, 12, RGBA(130, 140, 160, 255));
+        gfx::set_palette(_ctx->memory, 13, RGBA(150, 180, 190, 255));
+        gfx::set_palette(_ctx->memory, 14, RGBA(90, 110, 130, 255));
+        gfx::set_palette(_ctx->memory, 15, RGBA(50, 60, 90, 255));
     }
 
     void Emulator::handle_signal() {

@@ -18,13 +18,11 @@ namespace t8::core::gfx
 
     void set_trans(VirtualMemory* mem, uint16_t t = 1);
 
-    void reset_palette(VirtualMemory* mem);
+    void set_palette(VirtualMemory* mem, uint8_t index, uint32_t c);
 
-    void set_pcolor(VirtualMemory* mem, uint8_t index, uint32_t c);
+    void set_palette_map(VirtualMemory* mem, uint8_t n, uint8_t map);
 
-    void set_pmap(VirtualMemory* mem, uint8_t n, uint8_t map);
-
-    uint8_t get_pmap(VirtualMemory* mem, uint8_t n);
+    uint8_t get_palette_map(VirtualMemory* mem, uint8_t n);
 
     void set_pixel(VirtualMemory* mem, int x, int y, uint8_t color);
 

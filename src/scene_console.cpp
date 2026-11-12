@@ -75,10 +75,10 @@ namespace t8::scene::console {
         if (str_equals(payload[0], "help")) {
             print(state, "Commands:", false, 6);
             print(state, "");
-            print(state, "load <filename>");
-            print(state, "run");
-            print(state, "save <filename>");
-            print(state, "cls");
+            print(state, "load <filename> - load cart");
+            print(state, "save <filename> - save cart");
+            print(state, "run - strat script");
+            print(state, "cls - clear console");
             print(state, "");
             print(state, "Press esc to editor view");
             return true;
